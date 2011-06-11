@@ -42,7 +42,7 @@ void load_pts( char * ptsfile ) {
 	}
 
 	/* Do we have color information in the pts file? */
-	int read_color = valcount > 3;
+	int read_color = valcount >= 6;
 	/* Are there additional columns we dont want to have? */
 	int dummy_count = valcount - ( read_color ? 6 : 3 );
 	float dummy;
@@ -253,7 +253,7 @@ void init() {
 	if ( colors ) {
 		glutInitDisplayMode( GLUT_RGBA | GLUT_DOUBLE | GLUT_ALPHA | GLUT_DEPTH );
 	} else {
-		glutInitDisplayMode( GLUT_RGBA | GLUT_DOUBLE | GLUT_ALPHA | GLUT_DEPTH );
+		glutInitDisplayMode( GLUT_LUMINANCE | GLUT_DOUBLE | GLUT_ALPHA | GLUT_DEPTH );
 	}
 
 	window = glutCreateWindow( "ptsViewer" );
