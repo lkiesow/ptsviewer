@@ -60,6 +60,8 @@ void load_pts( char * ptsfile ) {
 
 	while ( !feof( f ) ) {
 		fscanf( f, "%f %f %f", vert_pos, vert_pos+1, vert_pos+2 );
+		vert_pos[1] *= -1;
+		vert_pos[2] *= -1;
 		vert_pos += 3;
 		for ( i = 0; i < dummy_count; i++ ) {
 			fscanf( f, "%f", &dummy );
@@ -102,8 +104,8 @@ void load_pts( char * ptsfile ) {
 void mouseMoved( int x, int y ) {
 
 	if ( mx >= 0 && my >= 0 ) {
-		rotangles[0] += ( y - my ) * invertroty;
-		rotangles[1] += ( x - mx ) * invertrotx;
+		rot.tilt += ( y - my ) * invertroty / 4.0f;
+		rot.pan  += ( x - mx ) * invertrotx / 4.0f;
 	}
 	mx = x;
 	my = y;
@@ -163,8 +165,8 @@ void drawScene() {
 	glTranslatef( translate.x, translate.y, translate.z );
 
 	/* Apply rotation. */
-	glRotatef( rotangles[0] / 4, 1, 0, 0 );
-	glRotatef( rotangles[1] / 4, 0, 1, 0 );
+	glRotatef( (int) rot.tilt, 1, 0, 0 );
+	glRotatef( (int) rot.pan, 0, 1, 0 );
 
 	/* Set point size */
 	glPointSize( pointsize );
@@ -201,8 +203,8 @@ void keyPressed( unsigned char key, int x, int y ) {
 			exit( EXIT_SUCCESS );
 		case '+': zoom        *= 1.1; break;
 		case '-': zoom        /= 1.1; break;
-		case 'a': translate.x += 0.1; break;
-		case 'd': translate.x -= 0.1; break;
+		case 'a': translate.x -= 0.1; break;
+		case 'd': translate.x += 0.1; break;
 		case 'w': translate.z += 0.1; break;
 		case 's': translate.z -= 0.1; break;
 		case 'q': translate.y += 0.1; break;
@@ -212,7 +214,7 @@ void keyPressed( unsigned char key, int x, int y ) {
 		case 'p': pointsize   *= 1.1; break;
 		case 'x': invertrotx  *= -1;  break;
 		case 'y': invertroty  *= -1;  break;
-		case 'f': rotangles[0] += 180 * 4; break;
+		case 'f': rot.tilt    += 180; break;
 	}
 	glutPostRedisplay();
 
@@ -231,6 +233,8 @@ void resizeScene( int w, int h ) {
 	gluPerspective( 60, w / (float) h, 0, 200 );
 
    glMatrixMode( GL_MODELVIEW );
+	glEnable( GL_DEPTH_TEST );
+	glDepthFunc( GL_LEQUAL );
 
 }
 
@@ -245,15 +249,14 @@ void init() {
 	 * Set mode for GLUT windows:
 	 * GLUT_RGBA       Red, green, blue, alpha framebuffer.
 	 * GLUT_DOUBLE     Double-buffered mode.
-	 * GLUT_ALPHA      Alpha channel.
 	 * GLUT_DEPTH      Depth buffering.
 	 * GLUT_LUMINANCE  Greyscale color mode.
 	 **/
 
 	if ( colors ) {
-		glutInitDisplayMode( GLUT_RGBA | GLUT_DOUBLE | GLUT_ALPHA | GLUT_DEPTH );
+		glutInitDisplayMode( GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH );
 	} else {
-		glutInitDisplayMode( GLUT_LUMINANCE | GLUT_DOUBLE | GLUT_ALPHA | GLUT_DEPTH );
+		glutInitDisplayMode( GLUT_LUMINANCE | GLUT_DOUBLE | GLUT_DEPTH );
 	}
 
 	window = glutCreateWindow( "ptsViewer" );

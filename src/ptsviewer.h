@@ -43,15 +43,22 @@ struct {
 } translate = { 
 	0.0, /* x */
 	0.0, /* y */
-	-6.0 /* z */
+	0.0 /* z */
 };
 
 int window;
 int mx = -1;
 int my = -1;
-int rotangles[2] = {0};
-int invertrotx = 1;
-int invertroty = 1;
+// int rotangles[2] = {0};
+struct {
+	float pan;
+	float tilt;
+} rot = {
+	0.0f,
+	0.0f
+};
+int invertrotx = -1;
+int invertroty = -1;
 float zoom = 1;
 int color = 1;
 float pointsize = 1.0f;
