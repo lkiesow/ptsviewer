@@ -106,6 +106,7 @@ void mouseMoved( int x, int y ) {
 	if ( mx >= 0 && my >= 0 ) {
 		rot.tilt += ( y - my ) * invertroty / 4.0f;
 		rot.pan  += ( x - mx ) * invertrotx / 4.0f;
+		glutPostRedisplay();
 	}
 	mx = x;
 	my = y;
@@ -124,7 +125,6 @@ void mousePress( int button, int state, int x, int y ) {
 			case GLUT_LEFT_BUTTON:
 				mx = x;
 				my = y;
-				glutIdleFunc( &drawScene );
 				break;
 			case 3: /* Mouse wheel up */
 				zoom *= 1.1f;
@@ -139,7 +139,6 @@ void mousePress( int button, int state, int x, int y ) {
 	if ( button == GLUT_LEFT_BUTTON && state == GLUT_UP ) {
 		mx = -1;
 		my = -1;
-		glutIdleFunc( NULL );
 	}
 
 }
