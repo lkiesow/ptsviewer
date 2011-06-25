@@ -4,7 +4,7 @@
  *
  *    Description:  OpenGL viewer for pts point cloud files
  *
- *        Version:  1.0
+ *        Version:  0.2
  *        Created:  05/11/2011 20:42:39 PM
  *       Revision:  none
  *       Compiler:  gcc

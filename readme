@@ -1,0 +1,34 @@
+REQUIRED LIBRARIES
+================================================================================
+
+ + OpenGL
+ + The OpenGL utility toolkit
+ + The OpenGL utility library
+
+
+Installation on Ubuntu:
+
+> apt-get install freeglut3 freeglut3-dev
+
+
+COMPILATION / INSTALLATION
+================================================================================
+
+Edit config.mk and call 
+
+> make clean install
+
+
+CONTROLS
+================================================================================
+
+ drag'n'drop  Rotate pointcloud
+ mousewheel   Zoom
+ i,o,p        Increase, reset, decrease Pointsize
+ a,d          Move left, right
+ w,s          Move forward, backward
+ q,e          Move up, down
+ f            Flip pointcloud
+ y,x          Invert rotation
+ +,-          Zoom in, out
+ <esc>        Quit
