@@ -4,9 +4,8 @@
  *
  *    Description:  OpenGL viewer for pts point cloud files
  *
- *        Version:  0.2
+ *        Version:  0.3
  *        Created:  05/11/2011 20:42:39 PM
- *       Revision:  none
  *       Compiler:  gcc
  *
  *         Author:  Lars Kiesow (lkiesow), lkiesow@uos.de
@@ -58,10 +57,14 @@ void load_pts( char * ptsfile ) {
 	/* Start from the beginning */
 	fseek( f, 0, SEEK_SET );
 
+	unsigned int maxval = 0;
 	while ( !feof( f ) ) {
 		fscanf( f, "%f %f %f", vert_pos, vert_pos+1, vert_pos+2 );
 		vert_pos[1] *= -1;
 		vert_pos[2] *= -1;
+		if ( abs( vert_pos[0] ) > maxval ) { maxval = abs( vert_pos[0] ); }
+		if ( abs( vert_pos[1] ) > maxval ) { maxval = abs( vert_pos[1] ); }
+		if ( abs( vert_pos[2] ) > maxval ) { maxval = abs( vert_pos[2] ); }
 		vert_pos += 3;
 		for ( i = 0; i < dummy_count; i++ ) {
 			fscanf( f, "%f", &dummy );
@@ -92,6 +95,19 @@ void load_pts( char * ptsfile ) {
 
 	if ( f ) {
 		fclose( f );
+	}
+
+	/* Normalize size of pointclouds. */
+	unsigned int factor = 1;
+	while ( factor * 100 < maxval ) {
+		factor *= 10;
+	}
+	if ( factor > 1 ) {
+		printf( "Maximum value is %u => scale factor is 1/%u.\n", maxval, factor );
+		printf( "Scaling points...\n" );
+		for ( i = 0; i < count * 3; i++ ) {
+			vertices[i] /= factor;
+		}
 	}
 
 }
@@ -127,11 +143,13 @@ void mousePress( int button, int state, int x, int y ) {
 				my = y;
 				break;
 			case 3: /* Mouse wheel up */
-				zoom *= 1.1f;
+//				zoom *= 1.1f;
+				translate.z += 1;
 				glutPostRedisplay();
 				break;
 			case 4: /* Mouse wheel down */
-				zoom /= 1.1f;
+//				zoom /= 1.1f;
+				translate.z -= 1;
 				glutPostRedisplay();
 				break;
 		}
@@ -202,15 +220,24 @@ void keyPressed( unsigned char key, int x, int y ) {
 			exit( EXIT_SUCCESS );
 		case '+': zoom        *= 1.1; break;
 		case '-': zoom        /= 1.1; break;
+		/* movement */
 		case 'a': translate.x -= 0.1; break;
 		case 'd': translate.x += 0.1; break;
 		case 'w': translate.z += 0.1; break;
 		case 's': translate.z -= 0.1; break;
 		case 'q': translate.y += 0.1; break;
 		case 'e': translate.y -= 0.1; break;
-		case 'i': pointsize   /= 1.1; break;
+		/* Uppercase: fast movement */
+		case 'A': translate.x -= 1; break;
+		case 'D': translate.x += 1; break;
+		case 'W': translate.z += 1; break;
+		case 'S': translate.z -= 1; break;
+		case 'Q': translate.y += 1; break;
+		case 'E': translate.y -= 1; break;
+		/* Other stuff. */
+		case 'i': pointsize   -= 1.1; break;
 		case 'o': pointsize    = 1.0; break;
-		case 'p': pointsize   *= 1.1; break;
+		case 'p': pointsize   += 1.1; break;
 		case 'x': invertrotx  *= -1;  break;
 		case 'y': invertroty  *= -1;  break;
 		case 'f': rot.tilt    += 180; break;
@@ -324,11 +351,14 @@ void printHelp() {
 
 	printf( "\n=== CONTROLS: ======\n"
 			" drag'n'drop  Rotate pointcloud\n"
-			" mousewheel   Zoom\n"
-			" i,o,p        Increase, reset, decrease Pointsize\n"
+			" mousewheel   Move forward, backward (fact)\n"
+			" i,o,p        Increase, reset, decrease pointsize\n"
 			" a,d          Move left, right\n"
 			" w,s          Move forward, backward\n"
 			" q,e          Move up, down\n"
+			" A,D          Move left, right (fast)\n"
+			" W,S          Move forward, backward (fact)\n"
+			" Q,E          Move up, down (fast)\n"
 			" f            Flip pointcloud\n"
 			" y,x          Invert rotation\n"
 			" +,-          Zoom in, out\n"
