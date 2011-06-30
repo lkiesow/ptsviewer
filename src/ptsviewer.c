@@ -119,9 +119,15 @@ void load_pts( char * ptsfile ) {
  ******************************************************************************/
 void mouseMoved( int x, int y ) {
 
-	if ( mx >= 0 && my >= 0 ) {
-		rot.tilt += ( y - my ) * invertroty / 4.0f;
-		rot.pan  += ( x - mx ) * invertrotx / 4.0f;
+	if ( last_mousebtn == GLUT_LEFT_BUTTON ) {
+		if ( mx >= 0 && my >= 0 ) {
+			rot.tilt += ( y - my ) * invertroty / 4.0f;
+			rot.pan  += ( x - mx ) * invertrotx / 4.0f;
+			glutPostRedisplay();
+		}
+	} else if ( last_mousebtn == GLUT_RIGHT_BUTTON ) {
+		translate.y -= ( y - my ) / 100.0f;
+		translate.x += ( x - mx ) / 100.0f;
 		glutPostRedisplay();
 	}
 	mx = x;
@@ -139,6 +145,8 @@ void mousePress( int button, int state, int x, int y ) {
 	if ( state == GLUT_DOWN ) {
 		switch ( button ) {
 			case GLUT_LEFT_BUTTON:
+			case GLUT_RIGHT_BUTTON:
+				last_mousebtn = button;
 				mx = x;
 				my = y;
 				break;
@@ -153,10 +161,6 @@ void mousePress( int button, int state, int x, int y ) {
 				glutPostRedisplay();
 				break;
 		}
-	}
-	if ( button == GLUT_LEFT_BUTTON && state == GLUT_UP ) {
-		mx = -1;
-		my = -1;
 	}
 
 }
@@ -218,6 +222,13 @@ void keyPressed( unsigned char key, int x, int y ) {
 		case 27:
 			glutDestroyWindow( window );
 			exit( EXIT_SUCCESS );
+		case 'j': 
+			translate.x = 0;
+			translate.y = 0;
+			translate.z = 0;
+			rot.pan     = 0;
+			rot.tilt    = 0;
+			break;
 		case '+': zoom        *= 1.1; break;
 		case '-': zoom        /= 1.1; break;
 		/* movement */
@@ -350,18 +361,22 @@ int main( int argc, char ** argv ) {
 void printHelp() {
 
 	printf( "\n=== CONTROLS: ======\n"
-			" drag'n'drop  Rotate pointcloud\n"
-			" mousewheel   Move forward, backward (fact)\n"
-			" i,o,p        Increase, reset, decrease pointsize\n"
-			" a,d          Move left, right\n"
-			" w,s          Move forward, backward\n"
-			" q,e          Move up, down\n"
-			" A,D          Move left, right (fast)\n"
-			" W,S          Move forward, backward (fact)\n"
-			" Q,E          Move up, down (fast)\n"
-			" f            Flip pointcloud\n"
-			" y,x          Invert rotation\n"
-			" +,-          Zoom in, out\n"
-			" <esc>        Quit\n" );
+			"-- Mouse: ---\n"
+			" drag left   Rotate pointcloud\n"
+			" drag right  Move up/down, left/right\n"
+			" wheel       Move forward, backward (fact)\n"
+			"-- Keyboard: ---\n"
+			" i,o,p       Increase, reset, decrease pointsize\n"
+			" a,d         Move left, right\n"
+			" w,s         Move forward, backward\n"
+			" q,e         Move up, down\n"
+			" A,D         Move left, right (fast)\n"
+			" W,S         Move forward, backward (fast)\n"
+			" Q,E         Move up, down (fast)\n"
+			" j           Jump to start position\n"
+			" f           Flip pointcloud\n"
+			" y,x         Invert rotation\n"
+			" +,-         Zoom in, out\n"
+			" <esc>       Quit\n" );
 
 }

@@ -26,6 +26,7 @@
 #include <math.h>
 
 
+/* Functions */
 void load_pts( char * ptsfile );
 void mouseMoved( int x, int y );
 void mousePress( int button, int state, int x, int y );
@@ -57,6 +58,7 @@ struct {
 	0.0f,
 	0.0f
 };
+int last_mousebtn;
 int invertrotx = -1;
 int invertroty = -1;
 float zoom = 1;
