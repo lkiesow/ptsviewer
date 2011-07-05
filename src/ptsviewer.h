@@ -67,3 +67,4 @@ float pointsize = 1.0f;
 float * vertices = NULL;
 float * colors = NULL;
 uint32_t count = 0;
+uint32_t maxdim = 0;

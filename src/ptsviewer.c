@@ -102,6 +102,7 @@ void load_pts( char * ptsfile ) {
 	while ( factor * 100 < maxval ) {
 		factor *= 10;
 	}
+	maxdim = maxval / factor;
 	if ( factor > 1 ) {
 		printf( "Maximum value is %u => scale factor is 1/%u.\n", maxval, factor );
 		printf( "Scaling points...\n" );
@@ -126,8 +127,13 @@ void mouseMoved( int x, int y ) {
 			glutPostRedisplay();
 		}
 	} else if ( last_mousebtn == GLUT_RIGHT_BUTTON ) {
-		translate.y -= ( y - my ) / 100.0f;
-		translate.x += ( x - mx ) / 100.0f;
+		if ( maxdim > 10 ) {
+			translate.y -= ( y - my ) / 10.0f;
+			translate.x += ( x - mx ) / 10.0f;
+		} else {
+			translate.y -= ( y - my ) / 100.0f;
+			translate.x += ( x - mx ) / 100.0f;
+		}
 		glutPostRedisplay();
 	}
 	mx = x;
