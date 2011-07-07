@@ -242,6 +242,7 @@ void keyPressed( unsigned char key, int x, int y ) {
 			translate.z = 0;
 			rot.pan     = 0;
 			rot.tilt    = 0;
+			zoom        = 1;
 			break;
 		case '+': zoom        *= 1.1; break;
 		case '-': zoom        /= 1.1; break;
