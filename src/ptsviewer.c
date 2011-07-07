@@ -60,8 +60,7 @@ void load_pts( char * ptsfile ) {
 	unsigned int maxval = 0;
 	while ( !feof( f ) ) {
 		fscanf( f, "%f %f %f", vert_pos, vert_pos+1, vert_pos+2 );
-		vert_pos[1] *= -1;
-		vert_pos[2] *= -1;
+		vert_pos[2] *= -1; /* z */
 		if ( abs( vert_pos[0] ) > maxval ) { maxval = abs( vert_pos[0] ); }
 		if ( abs( vert_pos[1] ) > maxval ) { maxval = abs( vert_pos[1] ); }
 		if ( abs( vert_pos[2] ) > maxval ) { maxval = abs( vert_pos[2] ); }
@@ -92,6 +91,15 @@ void load_pts( char * ptsfile ) {
 	}
 	count--;
 	printf( "%u values read.\nPointcloud loaded.\n", count );
+
+	/* Fill color array if we did not get any color information from a file */
+	if ( !colors ) {
+		colors = realloc( colors, count * 3 * sizeof(float) );
+		float * c = colors;
+		for ( ; c < colors + ( count * 3 ); c++ ) {
+			*c = 1.0f;
+		}
+	}
 
 	if ( f ) {
 		fclose( f );
@@ -297,7 +305,7 @@ void init() {
 	 **/
 
 	if ( colors ) {
-		glutInitDisplayMode( GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH );
+		glutInitDisplayMode( GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH );
 	} else {
 		glutInitDisplayMode( GLUT_LUMINANCE | GLUT_DOUBLE | GLUT_DEPTH );
 	}
