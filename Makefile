@@ -3,7 +3,7 @@
 include config.mk
 
 it: $(OBJDIR)/ptsviewer.o
-	$(COMPILER) $(FLAGS) $(OBJDIR)/*.o -o ptsviewer
+	$(COMPILER) $(OBJDIR)/*.o -o ptsviewer  $(FLAGS)
 
 $(OBJDIR)/ptsviewer.o: $(SRCDIR)/ptsviewer.c $(SRCDIR)/ptsviewer.h
 	@mkdir -p $(OBJDIR)
