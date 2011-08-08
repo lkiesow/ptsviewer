@@ -27,7 +27,7 @@
 
 
 /* Functions */
-void load_pts( char * ptsfile );
+void loadPts( char * ptsfile, size_t idx );
 void mouseMoved( int x, int y );
 void mousePress( int button, int state, int x, int y );
 void drawScene();
@@ -37,11 +37,21 @@ void init();
 int main( int argc, char ** argv );
 void printHelp();
 
-struct {
+/* Type definitions */
+typedef struct {
 	GLdouble x;
 	GLdouble y;
 	GLdouble z;
-} translate = { 
+} coord3d;
+
+typedef struct {
+	float *  vertices;
+	float *  colors;
+	uint32_t pointcount;
+} cloud;
+
+/* Global variables */
+coord3d translate = { 
 	0.0, /* x */
 	0.0, /* y */
 	0.0 /* z */
@@ -63,8 +73,7 @@ int invertrotx = -1;
 int invertroty = -1;
 float zoom = 1;
 int color = 1;
-float pointsize = 1.0f;
-float * vertices = NULL;
-float * colors = NULL;
-uint32_t count = 0;
-uint32_t maxdim = 0;
+float pointsize  = 1.0f;
+cloud * g_clouds = NULL;
+uint32_t g_cloudcount;
+uint32_t maxdim  = 0;

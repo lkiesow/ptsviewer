@@ -20,7 +20,7 @@
  *         Name:  load_pts
  *  Description:  Load a pts file into memory.
  ******************************************************************************/
-void load_pts( char * ptsfile ) {
+void loadPts( char * ptsfile, size_t idx ) {
 
 	FILE * f = fopen( ptsfile, "r" );
 	if ( !f ) {
@@ -46,12 +46,12 @@ void load_pts( char * ptsfile ) {
 	int dummy_count = valcount - ( read_color ? 6 : 3 );
 	float dummy;
 
-	vertices = realloc( vertices, 3000000 * sizeof(float) );
-	float * vert_pos = vertices;
+	g_clouds[ idx ].vertices = realloc( g_clouds[ idx ].vertices, 3000000 * sizeof(float) );
+	float * vert_pos = g_clouds[ idx ].vertices;
 	if ( read_color ) {
-		colors = realloc( colors,   3000000 * sizeof(float) );
+		g_clouds[ idx ].colors = realloc( g_clouds[ idx ].colors, 3000000 * sizeof(float) );
 	}
-	float * color_pos = colors;
+	float * color_pos = g_clouds[ idx ].colors;
 	int i;
 
 	/* Start from the beginning */
@@ -75,28 +75,31 @@ void load_pts( char * ptsfile ) {
 			*(color_pos++) = g / 255.0f;
 			*(color_pos++) = b / 255.0f;
 		}
-		count++;
-		if ( count % 100000 == 0 ) {
-			printf( "%u values read.\n", count );
+		g_clouds[ idx ].pointcount++;
+		if ( g_clouds[ idx ].pointcount % 100000 == 0 ) {
+			printf( "%u values read.\n", g_clouds[ idx ].pointcount );
 		}
-		if ( count % 1000000 == 0 ) {
+		if ( g_clouds[ idx ].pointcount % 1000000 == 0 ) {
 			/* Resize array (double the size). */
-			vertices = realloc( vertices, count * 6 * sizeof(float) );
-			vert_pos = vertices + 3 * count;
-			if ( colors ) {
-				colors = realloc( colors, count * 6 * sizeof(float) );
-				color_pos = colors + 3 * count;
+			g_clouds[ idx ].vertices = realloc( g_clouds[ idx ].vertices, 
+					g_clouds[ idx ].pointcount * 6 * sizeof(float) );
+			vert_pos = g_clouds[ idx ].vertices + 3 * g_clouds[ idx ].pointcount;
+			if ( g_clouds[ idx ].colors ) {
+				g_clouds[ idx ].colors = realloc( g_clouds[ idx ].colors, 
+						g_clouds[ idx ].pointcount * 6 * sizeof(float) );
+				color_pos = g_clouds[ idx ].colors + 3 * g_clouds[ idx ].pointcount;
 			}
 		}
 	}
-	count--;
-	printf( "%u values read.\nPointcloud loaded.\n", count );
+	g_clouds[ idx ].pointcount--;
+	printf( "%u values read.\nPointcloud loaded.\n", g_clouds[ idx ].pointcount );
 
 	/* Fill color array if we did not get any color information from a file */
-	if ( !colors ) {
-		colors = realloc( colors, count * 3 * sizeof(float) );
-		float * c = colors;
-		for ( ; c < colors + ( count * 3 ); c++ ) {
+	if ( !g_clouds[ idx ].colors ) {
+		g_clouds[ idx ].colors = realloc( g_clouds[ idx ].colors, 
+				g_clouds[ idx ].pointcount * 3 * sizeof(float) );
+		float * c = g_clouds[ idx ].colors;
+		for ( ; c < g_clouds[ idx ].colors + ( g_clouds[ idx ].pointcount * 3 ); c++ ) {
 			*c = 1.0f;
 		}
 	}
@@ -110,14 +113,16 @@ void load_pts( char * ptsfile ) {
 	while ( factor * 100 < maxval ) {
 		factor *= 10;
 	}
-	maxdim = maxval / factor;
+	maxdim = maxdim > maxval ? maxdim : maxval;
+	/*
 	if ( factor > 1 ) {
 		printf( "Maximum value is %u => scale factor is 1/%u.\n", maxval, factor );
 		printf( "Scaling points...\n" );
-		for ( i = 0; i < count * 3; i++ ) {
-			vertices[i] /= factor;
+		for ( i = 0; i < g_clouds[ idx ].pointcount * 3; i++ ) {
+			g_clouds[ idx ].vertices[i] /= factor;
 		}
 	}
+	*/
 
 }
 
@@ -135,7 +140,10 @@ void mouseMoved( int x, int y ) {
 			glutPostRedisplay();
 		}
 	} else if ( last_mousebtn == GLUT_RIGHT_BUTTON ) {
-		if ( maxdim > 10 ) {
+		if ( maxdim > 100 ) {
+			translate.y -= ( y - my );
+			translate.x += ( x - mx );
+		} else if ( maxdim > 10 ) {
 			translate.y -= ( y - my ) / 10.0f;
 			translate.x += ( x - mx ) / 10.0f;
 		} else {
@@ -166,12 +174,12 @@ void mousePress( int button, int state, int x, int y ) {
 				break;
 			case 3: /* Mouse wheel up */
 //				zoom *= 1.1f;
-				translate.z += 1;
+				translate.z += maxdim / 100.0f;
 				glutPostRedisplay();
 				break;
 			case 4: /* Mouse wheel down */
 //				zoom /= 1.1f;
-				translate.z -= 1;
+				translate.z -= maxdim / 100.0f;
 				glutPostRedisplay();
 				break;
 		}
@@ -186,12 +194,8 @@ void mousePress( int button, int state, int x, int y ) {
  ******************************************************************************/
 void drawScene() {
 
-	if ( colors ) {
-		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-		glEnableClientState( GL_COLOR_ARRAY );
-	} else {
-		glClear( GL_COLOR_BUFFER_BIT );
-	}
+	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+	glEnableClientState( GL_COLOR_ARRAY );
 	glEnableClientState( GL_VERTEX_ARRAY );
 	glLoadIdentity();
 
@@ -206,20 +210,19 @@ void drawScene() {
 	/* Set point size */
 	glPointSize( pointsize );
 
-	/* Set vertex and color pointer. */
-	glVertexPointer( 3, GL_FLOAT, 0, vertices );
-	if ( colors ) {
-		glColorPointer( 3, GL_FLOAT, 0, colors );
-	}
+	int i;
+	for ( i = 0; i < g_cloudcount; i++ ) {
+		/* Set vertex and color pointer. */
+		glVertexPointer( 3, GL_FLOAT, 0, g_clouds[i].vertices );
+		glColorPointer( 3, GL_FLOAT, 0, g_clouds[i].colors );
 	
-	/* Draw pointcloud */
-	glDrawArrays( GL_POINTS, 0, count );
+		/* Draw pointcloud */
+		glDrawArrays( GL_POINTS, 0, g_clouds[i].pointcount );
+	}
 
 	/* Reset ClientState */
 	glDisableClientState( GL_VERTEX_ARRAY );
-	if ( colors ) {
-		glDisableClientState( GL_COLOR_ARRAY );
-	}
+	glDisableClientState( GL_COLOR_ARRAY );
 
 	glutSwapBuffers();
 
@@ -305,11 +308,7 @@ void init() {
 	 * GLUT_LUMINANCE  Greyscale color mode.
 	 **/
 
-	if ( colors ) {
-		glutInitDisplayMode( GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH );
-	} else {
-		glutInitDisplayMode( GLUT_LUMINANCE | GLUT_DOUBLE | GLUT_DEPTH );
-	}
+	glutInitDisplayMode( GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH );
 
 	window = glutCreateWindow( "ptsViewer" );
 
@@ -331,12 +330,14 @@ void init() {
  ******************************************************************************/
 void cleanup() {
 
+	/*
 	if ( vertices ) {
 		free( vertices );
 	}
 	if ( colors ) {
 		free( colors );
 	}
+	*/
 
 }
 
@@ -347,13 +348,20 @@ void cleanup() {
  ******************************************************************************/
 int main( int argc, char ** argv ) {
 
-	if ( argc != 2 ) {
-		printf( "Usage: %s ptsfile\n", *argv );
+	if ( argc < 2 ) {
+		printf( "Usage: %s ptsfile1 [ptsfile2 ...]\n", *argv );
 		exit( EXIT_SUCCESS );
 	}
 
+	/* Prepare array */
+	g_clouds     = (cloud *) malloc( (argc - 1) * sizeof( cloud ) );
+	g_cloudcount = argc - 1;
+
 	/* Load pts file */
-	load_pts( argv[1] );
+	int i;
+	for ( i = 0; i < g_cloudcount; i++ ) {
+		loadPts( argv[ i + 1 ], i );
+	}
 
 	printHelp();
 
