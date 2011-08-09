@@ -22,6 +22,9 @@
  ******************************************************************************/
 void loadPts( char * ptsfile, size_t idx ) {
 
+	printf( "Loading »%s«…\n", ptsfile );
+
+	/* Open file */
 	FILE * f = fopen( ptsfile, "r" );
 	if ( !f ) {
 		fprintf( stderr, "error: Could not open »%s«.\n", ptsfile );
@@ -46,7 +49,8 @@ void loadPts( char * ptsfile, size_t idx ) {
 	int dummy_count = valcount - ( read_color ? 6 : 3 );
 	float dummy;
 
-	g_clouds[ idx ].vertices = realloc( g_clouds[ idx ].vertices, 3000000 * sizeof(float) );
+	g_clouds[ idx ].vertices = ( float * ) malloc( 3000000 * sizeof(float) );
+
 	float * vert_pos = g_clouds[ idx ].vertices;
 	if ( read_color ) {
 		g_clouds[ idx ].colors = realloc( g_clouds[ idx ].colors, 3000000 * sizeof(float) );
@@ -330,14 +334,18 @@ void init() {
  ******************************************************************************/
 void cleanup() {
 
-	/*
-	if ( vertices ) {
-		free( vertices );
+	int i;
+	for ( i = 0; i < g_cloudcount; i++ ) {
+
+		if ( g_clouds[i].vertices ) {
+			free( g_clouds[i].vertices );
+		}
+		if ( g_clouds[i].colors ) {
+			free( g_clouds[i].colors );
+		}
 	}
-	if ( colors ) {
-		free( colors );
+	if ( g_clouds ) {
 	}
-	*/
 
 }
 
@@ -348,27 +356,36 @@ void cleanup() {
  ******************************************************************************/
 int main( int argc, char ** argv ) {
 
+	/* Initialize GLUT */
+	glutInit( &argc, argv );
+	init();
+
+	/* Check if we have enough parameters */
 	if ( argc < 2 ) {
 		printf( "Usage: %s ptsfile1 [ptsfile2 ...]\n", *argv );
 		exit( EXIT_SUCCESS );
 	}
 
 	/* Prepare array */
-	g_clouds     = (cloud *) malloc( (argc - 1) * sizeof( cloud ) );
+	g_clouds = (cloud *) malloc( (argc - 1) * sizeof( cloud ) );
+	if ( !g_clouds ) {
+		fprintf( stderr, "Could not allocate memory for pointclouds!\n" );
+		exit( EXIT_FAILURE );
+	}
 	g_cloudcount = argc - 1;
 
 	/* Load pts file */
 	int i;
 	for ( i = 0; i < g_cloudcount; i++ ) {
+		g_clouds[i].vertices = NULL;
+		g_clouds[i].colors   = NULL;
 		loadPts( argv[ i + 1 ], i );
 	}
 
+	/* Print usage information to stdout */
 	printHelp();
 
-	/* Initialize GLUT */
-	glutInit( &argc, argv );
-	init();
-
+	/* Run program */
 	glutMainLoop();
 
 	cleanup();
