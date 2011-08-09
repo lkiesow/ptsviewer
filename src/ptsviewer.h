@@ -48,6 +48,7 @@ typedef struct {
 	float *  vertices;
 	float *  colors;
 	uint32_t pointcount;
+	int      enabled;
 } cloud;
 
 /* Global variables */

@@ -216,12 +216,14 @@ void drawScene() {
 
 	int i;
 	for ( i = 0; i < g_cloudcount; i++ ) {
-		/* Set vertex and color pointer. */
-		glVertexPointer( 3, GL_FLOAT, 0, g_clouds[i].vertices );
-		glColorPointer( 3, GL_FLOAT, 0, g_clouds[i].colors );
-	
-		/* Draw pointcloud */
-		glDrawArrays( GL_POINTS, 0, g_clouds[i].pointcount );
+		if ( g_clouds[i].enabled ) {
+			/* Set vertex and color pointer. */
+			glVertexPointer( 3, GL_FLOAT, 0, g_clouds[i].vertices );
+			glColorPointer( 3, GL_FLOAT, 0, g_clouds[i].colors );
+		
+			/* Draw pointcloud */
+			glDrawArrays( GL_POINTS, 0, g_clouds[i].pointcount );
+		}
 	}
 
 	/* Reset ClientState */
@@ -268,12 +270,27 @@ void keyPressed( unsigned char key, int x, int y ) {
 		case 'Q': translate.y += 1; break;
 		case 'E': translate.y -= 1; break;
 		/* Other stuff. */
-		case 'i': pointsize   -= 1.1; break;
+		case 'i': pointsize    = pointsize < 2 ? 1 : pointsize - 1; break;
 		case 'o': pointsize    = 1.0; break;
-		case 'p': pointsize   += 1.1; break;
+		case 'p': pointsize   += 1.0; break;
 		case 'x': invertrotx  *= -1;  break;
 		case 'y': invertroty  *= -1;  break;
 		case 'f': rot.tilt    += 180; break;
+		/* Control pointclouds */
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8':
+		case '9':
+					 printf( "%d - %d\n", key, 0x30 );
+					 if ( g_cloudcount > key - 0x30 ) {
+					 	g_clouds[ key - 0x30 ].enabled = !g_clouds[ key - 0x30 ].enabled;
+					 }
 	}
 	glutPostRedisplay();
 
@@ -380,6 +397,7 @@ int main( int argc, char ** argv ) {
 		g_clouds[i].vertices = NULL;
 		g_clouds[i].colors   = NULL;
 		loadPts( argv[ i + 1 ], i );
+		g_clouds[i].enabled = 1;
 	}
 
 	/* Print usage information to stdout */
