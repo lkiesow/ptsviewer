@@ -37,7 +37,7 @@ void loadPts( char * ptsfile, size_t idx ) {
 	int valcount = 0;
 	char * pch = strtok( line, "\t " );
 	while ( pch ) {
-		if ( strcmp( pch, "" ) ) {
+		if ( strcmp( pch, "" ) && strcmp( pch, "\n" ) ) {
 			valcount++;
 		}
 		pch = strtok( NULL, "\t " );
