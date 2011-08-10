@@ -276,21 +276,13 @@ void keyPressed( unsigned char key, int x, int y ) {
 		case 'x': invertrotx  *= -1;  break;
 		case 'y': invertroty  *= -1;  break;
 		case 'f': rot.tilt    += 180; break;
-		/* Control pointclouds */
-		case '0':
-		case '1':
-		case '2':
-		case '3':
-		case '4':
-		case '5':
-		case '6':
-		case '7':
-		case '8':
-		case '9':
-					 printf( "%d - %d\n", key, 0x30 );
-					 if ( g_cloudcount > key - 0x30 ) {
-					 	g_clouds[ key - 0x30 ].enabled = !g_clouds[ key - 0x30 ].enabled;
-					 }
+	}
+	/* Control pointclouds */
+	if ( key >= '0' && key <= '9' ) {
+		if ( g_cloudcount > key - 0x30 ) {
+			g_clouds[ key - 0x30 ].enabled = !g_clouds[ key - 0x30 ].enabled;
+		}
+	
 	}
 	glutPostRedisplay();
 
@@ -435,6 +427,8 @@ void printHelp() {
 			" f           Flip pointcloud\n"
 			" y,x         Invert rotation\n"
 			" +,-         Zoom in, out\n"
-			" <esc>       Quit\n" );
+			" 0...9       Toggle visibility of pointclouds 0 to 9\n"
+			" <esc>       Quit\n"
+			);
 
 }
