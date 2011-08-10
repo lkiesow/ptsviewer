@@ -241,6 +241,7 @@ void drawScene() {
  ******************************************************************************/
 void keyPressed( unsigned char key, int x, int y ) {
 
+	int i;
 	switch ( key ) {
 		case 27:
 			glutDestroyWindow( window );
@@ -256,19 +257,19 @@ void keyPressed( unsigned char key, int x, int y ) {
 		case '+': zoom        *= 1.1; break;
 		case '-': zoom        /= 1.1; break;
 		/* movement */
-		case 'a': translate.x -= 0.1; break;
-		case 'd': translate.x += 0.1; break;
-		case 'w': translate.z += 0.1; break;
-		case 's': translate.z -= 0.1; break;
-		case 'q': translate.y += 0.1; break;
-		case 'e': translate.y -= 0.1; break;
+		case 'a': translate.x -= 1; break;
+		case 'd': translate.x += 1; break;
+		case 'w': translate.z += 1; break;
+		case 's': translate.z -= 1; break;
+		case 'q': translate.y += 1; break;
+		case 'e': translate.y -= 1; break;
 		/* Uppercase: fast movement */
-		case 'A': translate.x -= 1; break;
-		case 'D': translate.x += 1; break;
-		case 'W': translate.z += 1; break;
-		case 'S': translate.z -= 1; break;
-		case 'Q': translate.y += 1; break;
-		case 'E': translate.y -= 1; break;
+		case 'A': translate.x -= 0.1; break;
+		case 'D': translate.x += 0.1; break;
+		case 'W': translate.z += 0.1; break;
+		case 'S': translate.z -= 0.1; break;
+		case 'Q': translate.y += 0.1; break;
+		case 'E': translate.y -= 0.1; break;
 		/* Other stuff. */
 		case 'i': pointsize    = pointsize < 2 ? 1 : pointsize - 1; break;
 		case 'o': pointsize    = 1.0; break;
@@ -276,6 +277,10 @@ void keyPressed( unsigned char key, int x, int y ) {
 		case 'x': invertrotx  *= -1;  break;
 		case 'y': invertroty  *= -1;  break;
 		case 'f': rot.tilt    += 180; break;
+		case 't':
+					 for ( i = 0; i < g_cloudcount; i++ ) {
+						 g_clouds[i].enabled = !g_clouds[i].enabled;
+					 }
 	}
 	/* Control pointclouds */
 	if ( key >= '0' && key <= '9' ) {
@@ -417,17 +422,18 @@ void printHelp() {
 			" wheel       Move forward, backward (fact)\n"
 			"-- Keyboard: ---\n"
 			" i,o,p       Increase, reset, decrease pointsize\n"
-			" a,d         Move left, right\n"
-			" w,s         Move forward, backward\n"
-			" q,e         Move up, down\n"
-			" A,D         Move left, right (fast)\n"
-			" W,S         Move forward, backward (fast)\n"
-			" Q,E         Move up, down (fast)\n"
+			" a,d         Move left, right (fast)\n"
+			" w,s         Move forward, backward (fast)\n"
+			" q,e         Move up, down (fast)\n"
+			" A,D         Move left, right (slow)\n"
+			" W,S         Move forward, backward (slow)\n"
+			" Q,E         Move up, down (slow)\n"
 			" j           Jump to start position\n"
 			" f           Flip pointcloud\n"
 			" y,x         Invert rotation\n"
 			" +,-         Zoom in, out\n"
 			" 0...9       Toggle visibility of pointclouds 0 to 9\n"
+			" t           Toggle visibility of all pointclouds\n"
 			" <esc>       Quit\n"
 			);
 

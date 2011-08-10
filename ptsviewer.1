@@ -3,10 +3,10 @@
 ptsviewer \- simple pointcloud viewer
 .SH SYNOPSIS
 .B ptsviewer
-.RB "ptsfile"
+.RB "ptsfile1 [ptsfile2 ...]"
 .SH DESCRIPTION
 ptsviewer is a simple OpenGL based viewer for pointclouds stored in a pts file.
-Both colored and non colored pointclouds are supported.
+Both colored and non colored pointclouds are supported. 
 .SH USAGE
 .B Mouse\-Drag left
 Rotate pointcloud.
@@ -54,22 +54,22 @@ Move up.
 Move down.
 .TP
 .B A
-Move left (fast).
+Move left (slow).
 .TP
 .B D
-Move right (fast).
+Move right (slow).
 .TP
 .B W
-Move forward (fast).
+Move forward (slow).
 .TP
 .B S
-Move backward (fast).
+Move backward (slow).
 .TP
 .B Q
-Move up (fast).
+Move up (slow).
 .TP
 .B E
-Move down (fast).
+Move down (slow).
 .TP
 .B j
 Jump to start position.
@@ -82,6 +82,12 @@ Invert x rotation.
 .TP
 .B y
 Invert y rotation.
+.TP
+.B 0...9
+Toggle visibility of pointclouds 0 to 9.
+.TP
+.B t
+Toggle visibility of all pointclouds.
 .TP
 .B Escape
 Quit program.
