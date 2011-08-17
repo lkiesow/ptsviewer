@@ -238,16 +238,17 @@ void drawScene() {
 		if ( g_clouds[i].enabled ) {
 			glLoadIdentity();
 
-			/* Apply scale and translation. */
+			/* Apply scale, rotation and translation. */
+			/* Global (all points) */
 			glScalef( zoom, zoom, 1 );
 			glTranslatef( translate.x, translate.y, translate.z );
 
-			glTranslatef( g_clouds[i].trans.x, g_clouds[i].trans.y,
-					g_clouds[i].trans.z );
-
-			/* Apply rotation. */
 			glRotatef( (int) rot.tilt, 1, 0, 0 );
 			glRotatef( (int) rot.pan, 0, 1, 0 );
+
+			/* local (this cloud only) */
+			glTranslatef( g_clouds[i].trans.x, g_clouds[i].trans.y,
+					g_clouds[i].trans.z );
 
 			glRotatef( (int) g_clouds[i].rot.x, 1, 0, 0 );
 			glRotatef( (int) g_clouds[i].rot.y, 0, 1, 0 );
