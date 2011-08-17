@@ -191,6 +191,15 @@ void mousePress( int button, int state, int x, int y ) {
 
 }
 
+void
+print_bitmap_string( void* font, char* s ) {
+	if ( s && strlen( s ) ) {
+		while ( *s ) {
+			glutBitmapCharacter( font, *s );
+			s++;
+		}   
+	}   
+}
 
 /*******************************************************************************
  *         Name:  drawScene
@@ -198,25 +207,52 @@ void mousePress( int button, int state, int x, int y ) {
  ******************************************************************************/
 void drawScene() {
 
+//	glColor4f(1.0, 1.0, 1.0, 1.0);
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
+	/*
+	GLfloat yxc[4] = {0.0};
+	GLboolean b = 0;
+//	glLoadIdentity();
+	glRasterPos3i( 5, -1, -1 );
+
+//	glBitmap(0, 0, 0, 0, 5, 5, NULL);
+//	glRasterPos2f( 2, -2 );
+//	glBitmap( 0,0,1,1,1,1, NULL );
+	glGetFloatv( GL_CURRENT_RASTER_POSITION, yxc );
+	glGetBooleanv( GL_CURRENT_RASTER_POSITION_VALID, &b );
+	printf( "%f %f %f %f %d\n", yxc[0], yxc[1], yxc[2], yxc[3], b );
+	print_bitmap_string( GLUT_BITMAP_8_BY_13, "XXX" );
+	glGetFloatv( GL_CURRENT_RASTER_POSITION, yxc );
+	printf( "%f %f %f %f\n", yxc[0], yxc[1], yxc[2], yxc[3] );
+	glTranslatef( 0, 0, 0 );
+	*/
+
 	glEnableClientState( GL_COLOR_ARRAY );
 	glEnableClientState( GL_VERTEX_ARRAY );
-	glLoadIdentity();
-
-	/* Apply scale and translation. */
-	glScalef( zoom, zoom, 1 );
-	glTranslatef( translate.x, translate.y, translate.z );
-
-	/* Apply rotation. */
-	glRotatef( (int) rot.tilt, 1, 0, 0 );
-	glRotatef( (int) rot.pan, 0, 1, 0 );
-
 	/* Set point size */
 	glPointSize( pointsize );
 
 	int i;
 	for ( i = 0; i < g_cloudcount; i++ ) {
 		if ( g_clouds[i].enabled ) {
+			glLoadIdentity();
+
+			/* Apply scale and translation. */
+			glScalef( zoom, zoom, 1 );
+			glTranslatef( translate.x, translate.y, translate.z );
+
+			glTranslatef( g_clouds[i].trans.x, g_clouds[i].trans.y,
+					g_clouds[i].trans.z );
+
+			/* Apply rotation. */
+			glRotatef( (int) rot.tilt, 1, 0, 0 );
+			glRotatef( (int) rot.pan, 0, 1, 0 );
+
+			glRotatef( (int) g_clouds[i].rot.x, 1, 0, 0 );
+			glRotatef( (int) g_clouds[i].rot.y, 0, 1, 0 );
+			glRotatef( (int) g_clouds[i].rot.z, 0, 0, 1 );
+
 			/* Set vertex and color pointer. */
 			glVertexPointer( 3, GL_FLOAT, 0, g_clouds[i].vertices );
 			glColorPointer( 3, GL_FLOAT, 0, g_clouds[i].colors );
@@ -236,10 +272,94 @@ void drawScene() {
 
 
 /*******************************************************************************
+ *         Name:  selectionKey
+ *  Description:  
+ ******************************************************************************/
+void selectionKey( unsigned char key ) {
+	
+	if ( key >= '0' && key <= '9' ) { /* Enter selection */
+		sprintf( g_selection, "%s%c", g_selection, key );
+
+	} else if ( key == 13 ) { /* Apply selection, go to normal mode */
+
+		g_mode = VIEWER_MODE_NORMAL;
+		int sel = atoi( g_selection );
+		/* Check if cloud exists */
+		if ( sel < g_cloudcount ) {
+			g_clouds[ sel ].selected = !g_clouds[ sel ].selected;
+			printf( "Cloud %d %sselected\n", sel, 
+					g_clouds[ sel ].selected ? "" : "un" );
+		}
+		g_selection[0] = 0;
+
+	} else if ( key == 27 ) { /* Just switch back to normal mode. */
+		g_mode = VIEWER_MODE_NORMAL;
+		g_selection[0] = 0;
+	}
+
+}
+
+
+/*******************************************************************************
+ *         Name:  moveKeyPressed
+ *  Description:  
+ ******************************************************************************/
+void moveKeyPressed( unsigned char key ) {
+
+#define FORSEL  for ( i = 0; i < g_cloudcount; i++ ) { if ( g_clouds[i].selected )
+#define FORSELC for ( i = 0; i < g_cloudcount; i++ ) { if ( g_clouds[i].selected ) g_clouds[i]
+#define FSEND } break
+
+	int i;
+	switch ( key ) {
+		case 27 : g_mode = VIEWER_MODE_NORMAL; break;
+		/* movement */
+		case 'a': FORSELC.trans.x -= 1; FSEND;
+		case 'd': FORSELC.trans.x += 1; FSEND;
+		case 'w': FORSELC.trans.z += 1; FSEND;
+		case 's': FORSELC.trans.z -= 1; FSEND;
+		case 'q': FORSELC.trans.y += 1; FSEND;
+		case 'e': FORSELC.trans.y -= 1; FSEND;
+		/* Uppercase: fast movement */
+		case 'A': FORSELC.trans.x -= 0.1; FSEND;
+		case 'D': FORSELC.trans.x += 0.1; FSEND;
+		case 'W': FORSELC.trans.z += 0.1; FSEND;
+		case 'S': FORSELC.trans.z -= 0.1; FSEND;
+		case 'Q': FORSELC.trans.y += 0.1; FSEND;
+		case 'E': FORSELC.trans.y -= 0.1; FSEND;
+		/* Rotation */
+		case 'r': FORSELC.rot.x -= 1; FSEND;
+		case 'f': FORSELC.rot.x += 1; FSEND;
+		case 't': FORSELC.rot.y -= 1; FSEND;
+		case 'g': FORSELC.rot.y += 1; FSEND;
+		case 'z': FORSELC.rot.z -= 1; FSEND;
+		case 'h': FORSELC.rot.z += 1; FSEND;
+		/* Other stuff */
+		case ' ': FORSELC.enabled = !g_clouds[i].enabled; FSEND;
+		case 'p': FORSEL printf( "%d: %f %f %f  %f %f %f\n", i,
+							 g_clouds[i].trans.x, g_clouds[i].trans.y,
+							 g_clouds[i].trans.z, g_clouds[i].rot.x,
+							 g_clouds[i].rot.y, g_clouds[i].rot.z); FSEND;
+	}
+	glutPostRedisplay();
+	
+
+}
+
+
+/*******************************************************************************
  *         Name:  keyPressed
  *  Description:  Handle keyboard control events.
  ******************************************************************************/
 void keyPressed( unsigned char key, int x, int y ) {
+
+	if ( g_mode == VIEWER_MODE_SELECT ) {
+		selectionKey( key );
+		return;
+	} else if ( g_mode == VIEWER_MODE_MOVESEL ) {
+		moveKeyPressed( key );
+		return;
+	}
 
 	int i;
 	switch ( key ) {
@@ -270,6 +390,9 @@ void keyPressed( unsigned char key, int x, int y ) {
 		case 'S': translate.z -= 0.1; break;
 		case 'Q': translate.y += 0.1; break;
 		case 'E': translate.y -= 0.1; break;
+		/* Mode changes */
+		case 13 : g_mode = VIEWER_MODE_SELECT; break;
+		case 'm': g_mode = VIEWER_MODE_MOVESEL; break;
 		/* Other stuff. */
 		case 'i': pointsize    = pointsize < 2 ? 1 : pointsize - 1; break;
 		case 'o': pointsize    = 1.0; break;
@@ -277,6 +400,7 @@ void keyPressed( unsigned char key, int x, int y ) {
 		case 'x': invertrotx  *= -1;  break;
 		case 'y': invertroty  *= -1;  break;
 		case 'f': rot.tilt    += 180; break;
+		case 'z': g_clouds[0].rot.y += 1; break;
 		case 't':
 					 for ( i = 0; i < g_cloudcount; i++ ) {
 						 g_clouds[i].enabled = !g_clouds[i].enabled;
@@ -328,6 +452,7 @@ void init() {
 
 	glutInitDisplayMode( GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH );
 
+   glutInitWindowSize( 640, 480 );
 	window = glutCreateWindow( "ptsViewer" );
 
 	glutDisplayFunc(  &drawScene );
@@ -391,8 +516,7 @@ int main( int argc, char ** argv ) {
 	/* Load pts file */
 	int i;
 	for ( i = 0; i < g_cloudcount; i++ ) {
-		g_clouds[i].vertices = NULL;
-		g_clouds[i].colors   = NULL;
+		memset( g_clouds + i, 0, sizeof( cloud ) );
 		loadPts( argv[ i + 1 ], i );
 		g_clouds[i].enabled = 1;
 	}

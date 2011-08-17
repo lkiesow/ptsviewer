@@ -49,6 +49,9 @@ typedef struct {
 	float *  colors;
 	uint32_t pointcount;
 	int      enabled;
+	coord3d  trans;
+	coord3d  rot;
+	int      selected;
 } cloud;
 
 /* Global variables */
@@ -78,3 +81,12 @@ float pointsize  = 1.0f;
 cloud * g_clouds = NULL;
 uint32_t g_cloudcount;
 uint32_t maxdim  = 0;
+char g_selection[1024] = "";
+
+/* Define viewer modes */
+
+#define VIEWER_MODE_NORMAL  0
+#define VIEWER_MODE_SELECT  1
+#define VIEWER_MODE_MOVESEL 2
+
+int g_mode = VIEWER_MODE_NORMAL;
