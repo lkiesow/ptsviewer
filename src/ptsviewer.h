@@ -26,7 +26,6 @@
 #include <libgen.h>
 #include <math.h>
 
-
 /* Functions */
 void loadPts( char * ptsfile, size_t idx );
 void mouseMoved( int x, int y );
@@ -83,8 +82,9 @@ float pointsize  = 1.0f;
 cloud * g_clouds = NULL;
 uint32_t g_cloudcount;
 uint32_t maxdim  = 0;
-char g_selection[1024] = "";
-float g_movespeed = 1;
+char     g_selection[1024] = "";
+float    g_movespeed = 1;
+int      g_left = -75;
 
 /* Define viewer modes */
 

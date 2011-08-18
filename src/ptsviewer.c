@@ -189,15 +189,6 @@ void mousePress( int button, int state, int x, int y ) {
 
 }
 
-void
-print_bitmap_string( void* font, char* s ) {
-	if ( s && strlen( s ) ) {
-		while ( *s ) {
-			glutBitmapCharacter( font, *s );
-			s++;
-		}   
-	}   
-}
 
 /*******************************************************************************
  *         Name:  drawScene
@@ -207,24 +198,6 @@ void drawScene() {
 
 //	glColor4f(1.0, 1.0, 1.0, 1.0);
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-
-	/*
-	GLfloat yxc[4] = {0.0};
-	GLboolean b = 0;
-//	glLoadIdentity();
-	glRasterPos3i( 5, -1, -1 );
-
-//	glBitmap(0, 0, 0, 0, 5, 5, NULL);
-//	glRasterPos2f( 2, -2 );
-//	glBitmap( 0,0,1,1,1,1, NULL );
-	glGetFloatv( GL_CURRENT_RASTER_POSITION, yxc );
-	glGetBooleanv( GL_CURRENT_RASTER_POSITION_VALID, &b );
-	printf( "%f %f %f %f %d\n", yxc[0], yxc[1], yxc[2], yxc[3], b );
-	print_bitmap_string( GLUT_BITMAP_8_BY_13, "XXX" );
-	glGetFloatv( GL_CURRENT_RASTER_POSITION, yxc );
-	printf( "%f %f %f %f\n", yxc[0], yxc[1], yxc[2], yxc[3] );
-	glTranslatef( 0, 0, 0 );
-	*/
 
 	glEnableClientState( GL_COLOR_ARRAY );
 	glEnableClientState( GL_VERTEX_ARRAY );
@@ -265,6 +238,63 @@ void drawScene() {
 	glDisableClientState( GL_VERTEX_ARRAY );
 	glDisableClientState( GL_COLOR_ARRAY );
 
+
+
+
+	/* Print status of clouds at the top of the window. */
+	glLoadIdentity();
+	glTranslatef( 0, 0, -100 );
+
+	char buf[64];
+	int xpos = g_left;
+	for ( i = 0; i < g_cloudcount; i++ ) {
+		if ( g_clouds[i].selected ) {
+			glColor3f( g_clouds[i].enabled ? 1.0 : 0.6, 0.0, 0.0 );
+		} else {
+			if ( g_clouds[i].enabled ) {
+				glColor3f( 1.0, 1.0, 1.0 );
+			} else {
+				glColor3f( 0.6, 0.6, 0.6 );
+			}
+		}
+		glRasterPos2i( xpos, 54 );
+		sprintf( buf, "%d", i );
+		int j;
+		for ( j = 0; j < strlen( buf ); j++ ) {
+			glutBitmapCharacter( GLUT_BITMAP_8_BY_13, buf[j] );
+			xpos += 2;
+		}
+		xpos += 2;
+	}
+
+	/* Print selection at the bottom of the window. */
+	if ( g_mode == VIEWER_MODE_SELECT ) {
+		glLoadIdentity();
+		glTranslatef( 0, 0, -100 );
+		glColor4f( 1.0, 1.0, 1.0, 0.0 );
+		glRasterPos2i( g_left, -54 );
+		strcpy( buf, "SELECT: " );
+		for ( i = 0; i < strlen( buf ); i++ ) {
+			glutBitmapCharacter( GLUT_BITMAP_8_BY_13, buf[i] );
+		}
+		for ( i = 0; i < strlen( g_selection ); i++ ) {
+			glutBitmapCharacter( GLUT_BITMAP_8_BY_13, g_selection[i] );
+		}
+	
+	}
+
+	/* Print mode sign at the bottom of the window. */
+	if ( g_mode == VIEWER_MODE_MOVESEL ) {
+		glLoadIdentity();
+		glTranslatef( 0, 0, -100 );
+		glColor4f( 1.0, 1.0, 1.0, 0.0 );
+		glRasterPos2i( g_left, -54 );
+		strcpy( buf, "MOVE (Press 'm' to leave this mode)" );
+		for ( i = 0; i < strlen( buf ); i++ ) {
+			glutBitmapCharacter( GLUT_BITMAP_8_BY_13, buf[i] );
+		}
+	}
+
 	glutSwapBuffers();
 
 }
@@ -284,7 +314,7 @@ void selectionKey( unsigned char key ) {
 		g_mode = VIEWER_MODE_NORMAL;
 		int sel = atoi( g_selection );
 		/* Check if cloud exists */
-		if ( sel < g_cloudcount ) {
+		if ( strlen( g_selection ) && sel < g_cloudcount ) {
 			g_clouds[ sel ].selected = !g_clouds[ sel ].selected;
 			printf( "Cloud %d %sselected\n", sel, 
 					g_clouds[ sel ].selected ? "" : "un" );
@@ -295,6 +325,7 @@ void selectionKey( unsigned char key ) {
 		g_mode = VIEWER_MODE_NORMAL;
 		g_selection[0] = 0;
 	}
+	glutPostRedisplay();
 
 }
 
@@ -312,7 +343,7 @@ void moveKeyPressed( unsigned char key ) {
 
 	int i;
 	switch ( key ) {
-		case 27 : g_mode = VIEWER_MODE_NORMAL; break;
+		case 'm' : g_mode = VIEWER_MODE_NORMAL; break;
 		/* movement */
 		case 'a': FORSELC.trans.x -= 1 * g_movespeed; FSEND;
 		case 'd': FORSELC.trans.x += 1 * g_movespeed; FSEND;
@@ -460,6 +491,8 @@ void resizeScene( int w, int h ) {
 	glMatrixMode( GL_PROJECTION );
 	glLoadIdentity();
 	gluPerspective( 60, w / (float) h, 0, 200 );
+	g_left = (int) ( -tan( 0.39 * w / h ) * 100 ) - 13;
+
 
    glMatrixMode( GL_MODELVIEW );
 	glEnable( GL_DEPTH_TEST );
@@ -577,7 +610,7 @@ void printHelp() {
 			" drag left   Rotate pointcloud\n"
 			" drag right  Move up/down, left/right\n"
 			" wheel       Move forward, backward (fact)\n"
-			"-- Keyboard: ---\n"
+			"-- Keyboard (normal mode): ---\n"
 			" i,o,p       Increase, reset, decrease pointsize\n"
 			" a,d         Move left, right (fast)\n"
 			" w,s         Move forward, backward (fast)\n"
@@ -592,7 +625,30 @@ void printHelp() {
 			" *,/         Increase/Decrease movement speed\n"
 			" 0...9       Toggle visibility of pointclouds 0 to 9\n"
 			" t           Toggle visibility of all pointclouds\n"
+			" u           Unselect all clouds\n"
+			" <return>    Enter selection mode\n"
+			" m           Enter move mode\n"
 			" <esc>       Quit\n"
+			"-- Keyboard (selection mode): ---\n"
+			" 0..9        Enter cloud number\n"
+			" <return>    Apply selection.\n"
+			" <esc>       Cancel selection\n"
+			"-- Keyboard (move mode): ---\n"
+			" a,d         Move left, right (fast)\n"
+			" w,s         Move forward, backward (fast)\n"
+			" q,e         Move up, down (fast)\n"
+			" A,D         Move left, right (slow)\n"
+			" W,S         Move forward, backward (slow)\n"
+			" Q,E         Move up, down (slow)\n"
+			" r,f         Rotate around x-axis\n"
+			" t,g         Rotate around y-axis\n"
+			" z,h         Rotate around z-axis\n"
+			" R,F         Rotate around x-axis (slow)\n"
+			" T,G         Rotate around y-axis (slow)\n"
+			" Z,H         Rotate around z-axis (slow)\n"
+			" p           Print pose\n"
+			" P           Generate pose files in current directory\n"
+			" m           Leave move mode\n"
 			);
 
 }

@@ -13,10 +13,11 @@ GLUINC =$(shell pkg-config --cflags glu)
 GLULIB =$(shell pkg-config --libs   glu)
 GLUTINC=
 GLUTLIB=-lglut
+MLIB   =-lm
 
 # includes and libs
 INCS=-I. -I/usr/X11/include/ ${GLINC} ${GLUINC} ${GLUTINC}
-LIBS=-L/usr/lib ${GLLIB} ${GLULIB} ${GLUTLIB}
+LIBS=-L/usr/lib ${GLLIB} ${GLULIB} ${GLUTLIB} ${MLIB}
 
 # dirs for source and object files
 OBJDIR   = obj
