@@ -347,8 +347,8 @@ void moveKeyPressed( unsigned char key ) {
 		case ' ': FORSELC.enabled = !g_clouds[i].enabled; FSEND;
 		case 'p': FORALL printf( "%s: %f %f %f  %f %f %f\n", g_clouds[i].name,
 							 g_clouds[i].trans.x, g_clouds[i].trans.y,
-							 g_clouds[i].trans.z, g_clouds[i].rot.x,
-							 g_clouds[i].rot.y, g_clouds[i].rot.z); FSEND;
+							 -g_clouds[i].trans.z, g_clouds[i].rot.x,
+							 -g_clouds[i].rot.y, g_clouds[i].rot.z); FSEND;
 	}
 	/* Generate and save pose files */
 	if ( key == 'P' ) {
@@ -367,8 +367,8 @@ void moveKeyPressed( unsigned char key ) {
 			if ( f ) {
 				fprintf( f, "%f %f %f\n%f %f %f\n",
 							 g_clouds[i].trans.x, g_clouds[i].trans.y,
-							 g_clouds[i].trans.z, g_clouds[i].rot.x,
-							 g_clouds[i].rot.y, g_clouds[i].rot.z );
+							 -g_clouds[i].trans.z, -g_clouds[i].rot.x,
+							 -g_clouds[i].rot.y, g_clouds[i].rot.z );
 				fclose( f );
 			}
 		}
