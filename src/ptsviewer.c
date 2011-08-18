@@ -353,6 +353,7 @@ void moveKeyPressed( unsigned char key ) {
 	/* Generate and save pose files */
 	if ( key == 'P' ) {
 		char buf[1024];
+		char buf2[1024];
 		char * s;
 		for ( i = 0; i < g_cloudcount; i++ ) {
 			strcpy( buf, g_clouds[i].name );
@@ -360,9 +361,9 @@ void moveKeyPressed( unsigned char key ) {
 			if ( ( s = strrchr( buf, '.' ) ) ) {
 				*s = 0;
 			}
-			sprintf( buf, "./%s.pose", basename( buf ) );
-			printf( "Saving pose file to %s\n", buf );
-			FILE * f = fopen( buf, "w" );
+			sprintf( buf2, "./%s.pose", basename( buf ) );
+			printf( "Saving pose file to %s\n", buf2 );
+			FILE * f = fopen( buf2, "w" );
 			if ( f ) {
 				fprintf( f, "%f %f %f\n%f %f %f\n",
 							 g_clouds[i].trans.x, g_clouds[i].trans.y,
