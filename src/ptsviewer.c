@@ -307,6 +307,7 @@ void selectionKey( unsigned char key ) {
  ******************************************************************************/
 void moveKeyPressed( unsigned char key ) {
 
+#define FORALL  for ( i = 0; i < g_cloudcount; i++ ) {
 #define FORSEL  for ( i = 0; i < g_cloudcount; i++ ) { if ( g_clouds[i].selected )
 #define FORSELC for ( i = 0; i < g_cloudcount; i++ ) { if ( g_clouds[i].selected ) g_clouds[i]
 #define FSEND } break
@@ -335,12 +336,41 @@ void moveKeyPressed( unsigned char key ) {
 		case 'g': FORSELC.rot.y += 1; FSEND;
 		case 'z': FORSELC.rot.z -= 1; FSEND;
 		case 'h': FORSELC.rot.z += 1; FSEND;
+		/* Precise rotations */
+		case 'R': FORSELC.rot.x -= 0.1; FSEND;
+		case 'F': FORSELC.rot.x += 0.1; FSEND;
+		case 'T': FORSELC.rot.y -= 0.1; FSEND;
+		case 'G': FORSELC.rot.y += 0.1; FSEND;
+		case 'Z': FORSELC.rot.z -= 0.1; FSEND;
+		case 'H': FORSELC.rot.z += 0.1; FSEND;
 		/* Other stuff */
 		case ' ': FORSELC.enabled = !g_clouds[i].enabled; FSEND;
-		case 'p': FORSEL printf( "%d: %f %f %f  %f %f %f\n", i,
+		case 'p': FORALL printf( "%s: %f %f %f  %f %f %f\n", g_clouds[i].name,
 							 g_clouds[i].trans.x, g_clouds[i].trans.y,
 							 g_clouds[i].trans.z, g_clouds[i].rot.x,
 							 g_clouds[i].rot.y, g_clouds[i].rot.z); FSEND;
+	}
+	/* Generate and save pose files */
+	if ( key == 'P' ) {
+		char buf[1024];
+		char * s;
+		for ( i = 0; i < g_cloudcount; i++ ) {
+			strcpy( buf, g_clouds[i].name );
+			/* remove extension */
+			if ( ( s = strrchr( buf, '.' ) ) ) {
+				*s = 0;
+			}
+			sprintf( buf, "./%s.pose", basename( buf ) );
+			printf( "Saving pose file to %s\n", buf );
+			FILE * f = fopen( buf, "w" );
+			if ( f ) {
+				fprintf( f, "%f %f %f\n%f %f %f\n",
+							 g_clouds[i].trans.x, g_clouds[i].trans.y,
+							 g_clouds[i].trans.z, g_clouds[i].rot.x,
+							 g_clouds[i].rot.y, g_clouds[i].rot.z );
+				fclose( f );
+			}
+		}
 	}
 	glutPostRedisplay();
 	
@@ -519,6 +549,7 @@ int main( int argc, char ** argv ) {
 	for ( i = 0; i < g_cloudcount; i++ ) {
 		memset( g_clouds + i, 0, sizeof( cloud ) );
 		loadPts( argv[ i + 1 ], i );
+		g_clouds[i].name = argv[ i + 1 ];
 		g_clouds[i].enabled = 1;
 	}
 

@@ -23,6 +23,7 @@
 #include <GL/glu.h>
 
 #include <stdlib.h>
+#include <libgen.h>
 #include <math.h>
 
 
@@ -52,6 +53,7 @@ typedef struct {
 	coord3d  trans;
 	coord3d  rot;
 	int      selected;
+	char *   name;
 } cloud;
 
 /* Global variables */
