@@ -84,6 +84,7 @@ cloud * g_clouds = NULL;
 uint32_t g_cloudcount;
 uint32_t maxdim  = 0;
 char g_selection[1024] = "";
+float g_movespeed = 1;
 
 /* Define viewer modes */
 

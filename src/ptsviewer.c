@@ -177,13 +177,11 @@ void mousePress( int button, int state, int x, int y ) {
 				my = y;
 				break;
 			case 3: /* Mouse wheel up */
-//				zoom *= 1.1f;
-				translate.z += maxdim / 100.0f;
+				translate.z += g_movespeed * maxdim / 100.0f;
 				glutPostRedisplay();
 				break;
 			case 4: /* Mouse wheel down */
-//				zoom /= 1.1f;
-				translate.z -= maxdim / 100.0f;
+				translate.z -= g_movespeed * maxdim / 100.0f;
 				glutPostRedisplay();
 				break;
 		}
@@ -316,19 +314,19 @@ void moveKeyPressed( unsigned char key ) {
 	switch ( key ) {
 		case 27 : g_mode = VIEWER_MODE_NORMAL; break;
 		/* movement */
-		case 'a': FORSELC.trans.x -= 1; FSEND;
-		case 'd': FORSELC.trans.x += 1; FSEND;
-		case 'w': FORSELC.trans.z += 1; FSEND;
-		case 's': FORSELC.trans.z -= 1; FSEND;
-		case 'q': FORSELC.trans.y += 1; FSEND;
-		case 'e': FORSELC.trans.y -= 1; FSEND;
+		case 'a': FORSELC.trans.x -= 1 * g_movespeed; FSEND;
+		case 'd': FORSELC.trans.x += 1 * g_movespeed; FSEND;
+		case 'w': FORSELC.trans.z -= 1 * g_movespeed; FSEND;
+		case 's': FORSELC.trans.z += 1 * g_movespeed; FSEND;
+		case 'q': FORSELC.trans.y += 1 * g_movespeed; FSEND;
+		case 'e': FORSELC.trans.y -= 1 * g_movespeed; FSEND;
 		/* Uppercase: fast movement */
-		case 'A': FORSELC.trans.x -= 0.1; FSEND;
-		case 'D': FORSELC.trans.x += 0.1; FSEND;
-		case 'W': FORSELC.trans.z += 0.1; FSEND;
-		case 'S': FORSELC.trans.z -= 0.1; FSEND;
-		case 'Q': FORSELC.trans.y += 0.1; FSEND;
-		case 'E': FORSELC.trans.y -= 0.1; FSEND;
+		case 'A': FORSELC.trans.x -= 0.1 * g_movespeed; FSEND;
+		case 'D': FORSELC.trans.x += 0.1 * g_movespeed; FSEND;
+		case 'W': FORSELC.trans.z -= 0.1 * g_movespeed; FSEND;
+		case 'S': FORSELC.trans.z += 0.1 * g_movespeed; FSEND;
+		case 'Q': FORSELC.trans.y += 0.1 * g_movespeed; FSEND;
+		case 'E': FORSELC.trans.y -= 0.1 * g_movespeed; FSEND;
 		/* Rotation */
 		case 'r': FORSELC.rot.x -= 1; FSEND;
 		case 'f': FORSELC.rot.x += 1; FSEND;
@@ -409,19 +407,19 @@ void keyPressed( unsigned char key, int x, int y ) {
 		case '+': zoom        *= 1.1; break;
 		case '-': zoom        /= 1.1; break;
 		/* movement */
-		case 'a': translate.x -= 1; break;
-		case 'd': translate.x += 1; break;
-		case 'w': translate.z += 1; break;
-		case 's': translate.z -= 1; break;
-		case 'q': translate.y += 1; break;
-		case 'e': translate.y -= 1; break;
+		case 'a': translate.x += 1 * g_movespeed; break;
+		case 'd': translate.x -= 1 * g_movespeed; break;
+		case 'w': translate.z += 1 * g_movespeed; break;
+		case 's': translate.z -= 1 * g_movespeed; break;
+		case 'q': translate.y += 1 * g_movespeed; break;
+		case 'e': translate.y -= 1 * g_movespeed; break;
 		/* Uppercase: fast movement */
-		case 'A': translate.x -= 0.1; break;
-		case 'D': translate.x += 0.1; break;
-		case 'W': translate.z += 0.1; break;
-		case 'S': translate.z -= 0.1; break;
-		case 'Q': translate.y += 0.1; break;
-		case 'E': translate.y -= 0.1; break;
+		case 'A': translate.x -= 0.1 * g_movespeed; break;
+		case 'D': translate.x += 0.1 * g_movespeed; break;
+		case 'W': translate.z += 0.1 * g_movespeed; break;
+		case 'S': translate.z -= 0.1 * g_movespeed; break;
+		case 'Q': translate.y += 0.1 * g_movespeed; break;
+		case 'E': translate.y -= 0.1 * g_movespeed; break;
 		/* Mode changes */
 		case 13 : g_mode = VIEWER_MODE_SELECT; break;
 		case 'm': g_mode = VIEWER_MODE_MOVESEL; break;
@@ -429,6 +427,8 @@ void keyPressed( unsigned char key, int x, int y ) {
 		case 'i': pointsize    = pointsize < 2 ? 1 : pointsize - 1; break;
 		case 'o': pointsize    = 1.0; break;
 		case 'p': pointsize   += 1.0; break;
+		case '*': g_movespeed *= 10;  break;
+		case '/': g_movespeed /= 10;  break;
 		case 'x': invertrotx  *= -1;  break;
 		case 'y': invertroty  *= -1;  break;
 		case 'f': rot.tilt    += 180; break;
@@ -589,6 +589,7 @@ void printHelp() {
 			" f           Flip pointcloud\n"
 			" y,x         Invert rotation\n"
 			" +,-         Zoom in, out\n"
+			" *,/         Increase/Decrease movement speed\n"
 			" 0...9       Toggle visibility of pointclouds 0 to 9\n"
 			" t           Toggle visibility of all pointclouds\n"
 			" <esc>       Quit\n"
