@@ -343,6 +343,7 @@ void moveKeyPressed( unsigned char key ) {
 
 	int i;
 	switch ( key ) {
+		case 27:
 		case 'm' : g_mode = VIEWER_MODE_NORMAL; break;
 		/* movement */
 		case 'a': FORSELC.trans.x -= 1 * g_movespeed; FSEND;
@@ -401,6 +402,40 @@ void moveKeyPressed( unsigned char key ) {
 				fclose( f );
 			}
 		}
+
+	/* Load .pose files */
+	} else if ( key == 'l' || key == 'L' ) {
+		char buf[1024];
+		char buf2[1024];
+		char * s;
+		for ( i = 0; i < g_cloudcount; i++ ) {
+			if ( !g_clouds[i].selected ) {
+				continue;
+			}
+			strcpy( buf, g_clouds[i].name );
+			/* remove extension */
+			if ( ( s = strrchr( buf, '.' ) ) ) {
+				*s = 0;
+			}
+			if ( key == 'l' ) {
+				sprintf( buf2, "%s.pose", buf );
+			} else {
+				sprintf( buf2, "./%s.pose", basename( buf ) );
+			}
+			FILE * f = fopen( buf2, "r" );
+			if ( f ) {
+				printf( "Loading pose file from %s\n", buf2 );
+				double tx, ty, tz, rx, ry, rz;
+				fscanf( f, "%lf %lf %lf %lf %lf %lf", &tx, &ty, &tz, &rx, &ry, &rz );
+				g_clouds[i].trans.x =  tx;
+				g_clouds[i].trans.y =  ty;
+				g_clouds[i].trans.z = -tz;
+				g_clouds[i].rot.x   = -rx;
+				g_clouds[i].rot.y   = -ry;
+				g_clouds[i].rot.z   =  rz;
+				fclose( f );
+			}
+		}
 	}
 	glutPostRedisplay();
 	
@@ -422,6 +457,7 @@ void keyPressed( unsigned char key, int x, int y ) {
 		return;
 	}
 
+	float rgb[3];
 	int i;
 	switch ( key ) {
 		case 27:
@@ -464,7 +500,15 @@ void keyPressed( unsigned char key, int x, int y ) {
 		case 'y': invertroty  *= -1;  break;
 		case 'f': rot.tilt    += 180; break;
 		case 'z': g_clouds[0].rot.y += 1; break;
-		case 't':
+		case 'c': glGetFloatv( GL_COLOR_CLEAR_VALUE, rgb );
+					/* Invert background color */
+					if ( *rgb < 0.9 ) {
+						glClearColor( 1.0f, 1.0f, 1.0f, 0.0f );
+					} else {
+						glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
+					}
+				 break;
+	case 't':
 					 for ( i = 0; i < g_cloudcount; i++ ) {
 						 g_clouds[i].enabled = !g_clouds[i].enabled;
 					 }
@@ -626,6 +670,7 @@ void printHelp() {
 			" 0...9       Toggle visibility of pointclouds 0 to 9\n"
 			" t           Toggle visibility of all pointclouds\n"
 			" u           Unselect all clouds\n"
+			" c           Invert background color\n"
 			" <return>    Enter selection mode\n"
 			" m           Enter move mode\n"
 			" <esc>       Quit\n"
@@ -648,7 +693,7 @@ void printHelp() {
 			" Z,H         Rotate around z-axis (slow)\n"
 			" p           Print pose\n"
 			" P           Generate pose files in current directory\n"
-			" m           Leave move mode\n"
+			" m,<esc>     Leave move mode\n"
 			);
 
 }

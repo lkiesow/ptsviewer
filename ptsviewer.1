@@ -8,6 +8,7 @@ ptsviewer \- simple pointcloud viewer
 ptsviewer is a simple OpenGL based viewer for pointclouds stored in a pts file.
 Both colored and non colored pointclouds are supported. 
 .SH USAGE
+.TP
 .B Mouse\-Drag left
 Rotate pointcloud.
 .TP
@@ -15,61 +16,38 @@ Rotate pointcloud.
 Move up/down, left/right.
 .TP
 .B Scroll\-Up
-Move forward (fast).
+Move forward
 .TP
 .B Scroll\-Down
-Move backward (fast).
+Move backward
+.SH NORMAL MODE
 .TP
-.B +
-Increase zoom level.
+.B +,-
+Increase/Decrease zoom level.
 .TP
-.B -
-Decrease zoom level.
-.TP
-.B i
-Increase size of points.
+.B i,p
+Increase/Decrease size of points.
 .TP
 .B o
 Reset size of points.
 .TP
-.B p
-Decrease size of points.
+.B a,d
+Move left/right.
 .TP
-.B a
-Move left.
+.B w,s
+Move forward/backward.
 .TP
-.B d
-Move right.
+.B q,e
+Move up/down.
 .TP
-.B w
-Move forward.
+.B A,D
+Move left/right (slow).
 .TP
-.B s
-Move backward.
+.B W,S
+Move forward/backward (slow).
 .TP
-.B q
-Move up.
-.TP
-.B e
-Move down.
-.TP
-.B A
-Move left (slow).
-.TP
-.B D
-Move right (slow).
-.TP
-.B W
-Move forward (slow).
-.TP
-.B S
-Move backward (slow).
-.TP
-.B Q
-Move up (slow).
-.TP
-.B E
-Move down (slow).
+.B Q,E
+Move up/down (slow).
 .TP
 .B j
 Jump to start position.
@@ -77,20 +55,97 @@ Jump to start position.
 .B f
 Flip pointcloud.
 .TP
-.B x
-Invert x rotation.
-.TP
-.B y
-Invert y rotation.
+.B x,y
+Invert x/y rotation.
 .TP
 .B 0...9
 Toggle visibility of pointclouds 0 to 9.
 .TP
+.B *
+ Increase movement speed.
+.TP
+.B /
+ Decrease movement speed.
+.TP
+.B u
+Unselect all clouds.
+.TP
 .B t
 Toggle visibility of all pointclouds.
 .TP
+.B c
+Invert background color.
+.TP
+.B Return
+Enter selection mode.
+.TP
+.B m
+Enter move mode.
+.TP
 .B Escape
 Quit program.
+.SH SELECTION MODE
+.TP
+.B 0...9
+Enter cloud number.
+.TP
+.B Return
+Apply selection.
+.TP
+.B Escape
+Cancel selection.
+.SH MOVE MODE
+.TP
+.B a,d
+Move left/right.
+.TP
+.B w,s
+Move forward/backward.
+.TP
+.B q,e
+Move up/down.
+.TP
+.B A,D
+Move left/right (slow).
+.TP
+.B W,S
+Move forward/backward (slow).
+.TP
+.B Q,E
+Move up/down (slow).
+.TP
+.B r,f
+Rotate around x-axis.
+.TP
+.B t,g
+Rotate around y-axis.
+.TP
+.B z,h
+Rotate around z-axis.
+.TP
+.B R,F
+Rotate around x-axis (slow).
+.TP
+.B T,G
+Rotate around y-axis (slow).
+.TP
+.B Z,H
+Rotate around z-axis (slow).
+.TP
+.B p
+Print pose.
+.TP
+.B P
+Generate pose files in current directory.
+.TP
+.B L
+Load pose files for selected clouds from current directory.
+.TP
+.B l
+Load pose files for selected clouds from cloud directory.
+.TP
+.B m,Escape
+Return to normal mode.
 .SH SEE ALSO
 http://rab.informatik.uos.de:3000
 .SH BUGS
