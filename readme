@@ -1,3 +1,32 @@
+ABOUT
+================================================================================
+ptsviewer is a simple OpenGL based viewer for pointclouds stored in a pts file.
+Both colored and non colored pointclouds are supported. Multiple clouds can be
+loaded and pose estimations for matching can be created.
+
+
+PTS FILE FORMAT
+================================================================================
+The pts file format is designed to store pointclouds in a simple, human
+readable way. Each point is stored as a couple of values in one line of the pts
+file. One line contains at least three values, representing the x-, y- and
+z-position of the point in a three-dimensional cartesian coordinate system. If
+one line has six or more values, it is assumed that the last three values
+represent color information as 8-bit vales in a rgb color space. Additional
+information (like remission values, accuracy, ...) may be stored between these
+to sets of values. They are ignored.
+
+Example of a pts file containing values for position, color and accuracy:
+
+...
+-101.132004  -16.282200   -1.671650    9672.242188  88  69  60
+ -97.345001  -23.159800   -1.601770    9324.614258  88  69  60
+ -96.522903    5.354720   -3.460280    9934.269531  86  69  63
+ -96.475403    5.382280   -1.612710    9622.832031  86  69  63
+ -95.455399    5.657920   -3.712910    9886.268555  86  69  63
+...
+
+
 REQUIRED LIBRARIES
 ================================================================================
 
@@ -7,28 +36,70 @@ REQUIRED LIBRARIES
 
 
 Installation on Ubuntu:
-
 > apt-get install freeglut3 freeglut3-dev
+
+Installation on Fedora:
+> yum install freeglut freeglut-devel
 
 
 COMPILATION / INSTALLATION
 ================================================================================
 
-Edit config.mk and call 
+Edit config.mk (probably no changes have to be made) and call for cimpilation:
+
+> make
+
+If you want not only compile it, but install it just call with the appropriate
+rights:
 
 > make clean install
-
 
 CONTROLS
 ================================================================================
 
- drag'n'drop  Rotate pointcloud
- mousewheel   Zoom
- i,o,p        Increase, reset, decrease Pointsize
- a,d          Move left, right
- w,s          Move forward, backward
- q,e          Move up, down
- f            Flip pointcloud
- y,x          Invert rotation
- +,-          Zoom in, out
- <esc>        Quit
+For more details have a look at the manpage for ptsviewer.
+
+-- Mouse: ---
+ drag left   Rotate pointcloud
+ drag right  Move up/down, left/right
+ wheel       Move forward, backward (fact)
+-- Keyboard (normal mode): ---
+ i,o,p       Increase, reset, decrease pointsize
+ a,d         Move left, right (fast)
+ w,s         Move forward, backward (fast)
+ q,e         Move up, down (fast)
+ A,D         Move left, right (slow)
+ W,S         Move forward, backward (slow)
+ Q,E         Move up, down (slow)
+ j           Jump to start position
+ f           Flip pointcloud
+ y,x         Invert rotation
+ +,-         Zoom in, out
+ *,/         Increase/Decrease movement speed
+ 0...9       Toggle visibility of pointclouds 0 to 9
+ t           Toggle visibility of all pointclouds
+ u           Unselect all clouds
+ c           Invert background color
+ <return>    Enter selection mode
+ m           Enter move mode
+ <esc>       Quit
+-- Keyboard (selection mode): ---
+ 0..9        Enter cloud number
+ <return>    Apply selection.
+ <esc>       Cancel selection
+-- Keyboard (move mode): ---
+ a,d         Move left, right (fast)
+ w,s         Move forward, backward (fast)
+ q,e         Move up, down (fast)
+ A,D         Move left, right (slow)
+ W,S         Move forward, backward (slow)
+ Q,E         Move up, down (slow)
+ r,f         Rotate around x-axis
+ t,g         Rotate around y-axis
+ z,h         Rotate around z-axis
+ R,F         Rotate around x-axis (slow)
+ T,G         Rotate around y-axis (slow)
+ Z,H         Rotate around z-axis (slow)
+ p           Print pose
+ P           Generate pose files in current directory
+ m,<esc>     Leave move mode

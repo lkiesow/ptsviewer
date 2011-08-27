@@ -1,12 +1,10 @@
 /*******************************************************************************
  *
- *       Filename:  glpclview.h
+ *       Filename:  ptsviewer.h
  *
  *    Description:  OpenGL viewer for pts point cloud files
  *
- *        Version:  0.2
  *        Created:  06/11/2011 08:42:39 PM
- *       Revision:  none
  *       Compiler:  gcc
  *
  *         Author:  Lars Kiesow (lkiesow), lkiesow@uos.de

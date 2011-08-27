@@ -6,7 +6,40 @@ ptsviewer \- simple pointcloud viewer
 .RB "ptsfile1 [ptsfile2 ...]"
 .SH DESCRIPTION
 ptsviewer is a simple OpenGL based viewer for pointclouds stored in a pts file.
-Both colored and non colored pointclouds are supported. 
+Both colored and non colored pointclouds are supported. Multiple clouds can be
+loaded and pose estimations for matching can be created.
+.SH PTS FILE FORMAT
+The pts file format is designed to store pointclouds in a simple, human
+readable way. Each point is stored as a couple of values in one line of the pts
+file. One line contains at least three values, representing the x-, y- and
+z-position of the point in a three-dimensional cartesian coordinate system. If
+one line has six or more values, it is assumed that the last three values
+represent color information as 8-bit vales in a rgb color space. Additional
+information (like remission values, accuracy, ...) may be stored between these
+to sets of values. They are ignored.
+
+Example of a pts file containing values for position, color and accuracy:
+
+...
+-101.132004  -16.282200   -1.671650    9672.242188  88  69  60
+ -97.345001  -23.159800   -1.601770    9324.614258  88  69  60
+ -96.522903    5.354720   -3.460280    9934.269531  86  69  63
+ -96.475403    5.382280   -1.612710    9622.832031  86  69  63
+ -95.455399    5.657920   -3.712910    9886.268555  86  69  63
+...
+.SH COORDINATE SYSTEM
+The coordinate system is set to the following:
+.br
+   x    z
+.br
+   |  /               
+.br
+   | /                
+.br
+   +–––––y            
+.br
+This is not identical to the OpenGL coordinate system! But it is hopefully the
+same as all other software developed at the University of Osnabrück.
 .SH USAGE
 .TP
 .B Mouse\-Drag left
@@ -146,7 +179,17 @@ Load pose files for selected clouds from cloud directory.
 .TP
 .B m,Escape
 Return to normal mode.
+.SH LICENSE
+This project is licensed under the terms of the Simplified BSD License. For
+more details have a look a the license file which comes along with this
+software or can be found at
+https://github.com/lkiesow/ptsviewer/blob/master/license
 .SH SEE ALSO
-http://rab.informatik.uos.de:3000
+.TP
+.B Project page on github.com:
+https://github.com/lkiesow/ptsviewer
+.TP
+.B 3D-Toolkit, including 6dslam for pointcloud registration:
+http://slam6d.sourceforge.net/
 .SH BUGS
 Please report them!
