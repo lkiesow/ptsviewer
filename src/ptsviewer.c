@@ -80,7 +80,8 @@ void loadPts( char * ptsfile, size_t idx ) {
 		}
 		g_clouds[ idx ].pointcount++;
 		if ( g_clouds[ idx ].pointcount % 100000 == 0 ) {
-			printf( "%u values read.\n", g_clouds[ idx ].pointcount );
+			printf( "  %u values read.\r", g_clouds[ idx ].pointcount );
+			fflush( stdout );
 		}
 		if ( g_clouds[ idx ].pointcount % 1000000 == 0 ) {
 			/* Resize array (double the size). */
@@ -95,7 +96,7 @@ void loadPts( char * ptsfile, size_t idx ) {
 		}
 	}
 	g_clouds[ idx ].pointcount--;
-	printf( "%u values read.\nPointcloud loaded.\n", g_clouds[ idx ].pointcount );
+	printf( "  %u values read.\nPointcloud loaded.\n", g_clouds[ idx ].pointcount );
 
 	/* Fill color array if we did not get any color information from a file */
 	if ( !g_clouds[ idx ].colors ) {
@@ -305,18 +306,31 @@ void drawScene() {
  ******************************************************************************/
 void selectionKey( unsigned char key ) {
 	
-	if ( key >= '0' && key <= '9' ) { /* Enter selection */
+	if ( key == 8 && strlen( g_selection ) ) { /* Enter selection */
+		g_selection[ strlen( g_selection ) - 1 ] = 0;
+	} else if ( ( key >= '0' && key <= '9' ) || key == ',' ) { /* Enter selection */
 		sprintf( g_selection, "%s%c", g_selection, key );
 
 	} else if ( key == 13 ) { /* Apply selection, go to normal mode */
 
 		g_mode = VIEWER_MODE_NORMAL;
-		int sel = atoi( g_selection );
-		/* Check if cloud exists */
-		if ( strlen( g_selection ) && sel < g_cloudcount ) {
-			g_clouds[ sel ].selected = !g_clouds[ sel ].selected;
-			printf( "Cloud %d %sselected\n", sel, 
-					g_clouds[ sel ].selected ? "" : "un" );
+		char * s = g_selection;
+		
+		int sel;
+		while ( strlen( s ) ) {
+			/* Jump over comma. */
+			if ( *s == ',' ) {
+				s++;
+				continue;
+			}
+			sel = strtol( s, &s, 0 );
+			/* int sel = atoi( g_selection ); */
+			/* Check if cloud exists */
+			if ( sel < g_cloudcount ) {
+				g_clouds[ sel ].selected = !g_clouds[ sel ].selected;
+				printf( "Cloud %d %sselected\n", sel, 
+						g_clouds[ sel ].selected ? "" : "un" );
+			}
 		}
 		g_selection[0] = 0;
 
@@ -507,6 +521,11 @@ void keyPressed( unsigned char key, int x, int y ) {
 						glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
 					}
 				 break;
+	case 'u':
+					 for ( i = 0; i < g_cloudcount; i++ ) {
+						 g_clouds[i].selected = 0;
+					 }
+					 break;
 	case 't':
 					 for ( i = 0; i < g_cloudcount; i++ ) {
 						 g_clouds[i].enabled = !g_clouds[i].enabled;
@@ -692,6 +711,8 @@ void printHelp() {
 			" Z,H         Rotate around z-axis (slow)\n"
 			" p           Print pose\n"
 			" P           Generate pose files in current directory\n"
+			" l           Load pose files for selected clouds from current directory.\n"
+			" L           Load pose files for selected clouds from cloud directory.\n"
 			" m,<esc>     Leave move mode\n"
 			);
 

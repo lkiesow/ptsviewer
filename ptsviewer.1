@@ -54,6 +54,9 @@ Move forward
 .B Scroll\-Down
 Move backward
 .SH NORMAL MODE
+This mode is the main mode for viewing pointclouds. If you do not intend to
+modify any clouds or generate .pose files for them, you should always stay in
+this mode. After starting the ptsviewer you are automatically in this mode.
 .TP
 .B +,-
 Increase/Decrease zoom level.
@@ -118,9 +121,14 @@ Enter move mode.
 .B Escape
 Quit program.
 .SH SELECTION MODE
+This mode is for selecting pointclouds. You can enter either the index number
+of one pointcloud to select or a list of indices separated by comma.
 .TP
 .B 0...9
 Enter cloud number.
+.TP
+.B ,
+Separate two cloud numbers.
 .TP
 .B Return
 Apply selection.
@@ -128,6 +136,9 @@ Apply selection.
 .B Escape
 Cancel selection.
 .SH MOVE MODE
+This mode is for modifying the pose of pointclouds. You can move them around,
+rotate them and store/load these pose rearrangements as .pose file for use in
+the 3D-Toolkit (6dslam).
 .TP
 .B a,d
 Move left/right.
