@@ -117,7 +117,7 @@ void loadPts( char * ptsfile, size_t idx ) {
 	while ( factor * 100 < maxval ) {
 		factor *= 10;
 	}
-	maxdim = maxdim > maxval ? maxdim : maxval;
+	g_maxdim = g_maxdim > maxval ? g_maxdim : maxval;
 	/*
 	if ( factor > 1 ) {
 		printf( "Maximum value is %u => scale factor is 1/%u.\n", maxval, factor );
@@ -137,27 +137,27 @@ void loadPts( char * ptsfile, size_t idx ) {
  ******************************************************************************/
 void mouseMoved( int x, int y ) {
 
-	if ( last_mousebtn == GLUT_LEFT_BUTTON ) {
-		if ( mx >= 0 && my >= 0 ) {
-			rot.tilt += ( y - my ) * invertroty / 4.0f;
-			rot.pan  += ( x - mx ) * invertrotx / 4.0f;
+	if ( g_last_mousebtn == GLUT_LEFT_BUTTON ) {
+		if ( g_mx >= 0 && g_my >= 0 ) {
+			g_rot.tilt += ( y - g_my ) * g_invertroty / 4.0f;
+			g_rot.pan  += ( x - g_mx ) * g_invertrotx / 4.0f;
 			glutPostRedisplay();
 		}
-	} else if ( last_mousebtn == GLUT_RIGHT_BUTTON ) {
-		if ( maxdim > 100 ) {
-			translate.y -= ( y - my );
-			translate.x += ( x - mx );
-		} else if ( maxdim > 10 ) {
-			translate.y -= ( y - my ) / 10.0f;
-			translate.x += ( x - mx ) / 10.0f;
+	} else if ( g_last_mousebtn == GLUT_RIGHT_BUTTON ) {
+		if ( g_maxdim > 100 ) {
+			g_translate.y -= ( y - g_my );
+			g_translate.x += ( x - g_mx );
+		} else if ( g_maxdim > 10 ) {
+			g_translate.y -= ( y - g_my ) / 10.0f;
+			g_translate.x += ( x - g_mx ) / 10.0f;
 		} else {
-			translate.y -= ( y - my ) / 100.0f;
-			translate.x += ( x - mx ) / 100.0f;
+			g_translate.y -= ( y - g_my ) / 100.0f;
+			g_translate.x += ( x - g_mx ) / 100.0f;
 		}
 		glutPostRedisplay();
 	}
-	mx = x;
-	my = y;
+	g_mx = x;
+	g_my = y;
 
 }
 
@@ -172,16 +172,16 @@ void mousePress( int button, int state, int x, int y ) {
 		switch ( button ) {
 			case GLUT_LEFT_BUTTON:
 			case GLUT_RIGHT_BUTTON:
-				last_mousebtn = button;
-				mx = x;
-				my = y;
+				g_last_mousebtn = button;
+				g_mx = x;
+				g_my = y;
 				break;
 			case 3: /* Mouse wheel up */
-				translate.z += g_movespeed * maxdim / 100.0f;
+				g_translate.z += g_movespeed * g_maxdim / 100.0f;
 				glutPostRedisplay();
 				break;
 			case 4: /* Mouse wheel down */
-				translate.z -= g_movespeed * maxdim / 100.0f;
+				g_translate.z -= g_movespeed * g_maxdim / 100.0f;
 				glutPostRedisplay();
 				break;
 		}
@@ -202,7 +202,7 @@ void drawScene() {
 	glEnableClientState( GL_COLOR_ARRAY );
 	glEnableClientState( GL_VERTEX_ARRAY );
 	/* Set point size */
-	glPointSize( pointsize );
+	glPointSize( g_pointsize );
 
 	int i;
 	for ( i = 0; i < g_cloudcount; i++ ) {
@@ -211,11 +211,11 @@ void drawScene() {
 
 			/* Apply scale, rotation and translation. */
 			/* Global (all points) */
-			glScalef( zoom, zoom, 1 );
-			glTranslatef( translate.x, translate.y, translate.z );
+			glScalef( g_zoom, g_zoom, 1 );
+			glTranslatef( g_translate.x, g_translate.y, g_translate.z );
 
-			glRotatef( (int) rot.tilt, 1, 0, 0 );
-			glRotatef( (int) rot.pan, 0, 1, 0 );
+			glRotatef( (int) g_rot.tilt, 1, 0, 0 );
+			glRotatef( (int) g_rot.pan, 0, 1, 0 );
 
 			/* local (this cloud only) */
 			glTranslatef( g_clouds[i].trans.x, g_clouds[i].trans.y,
@@ -227,7 +227,7 @@ void drawScene() {
 
 			/* Set vertex and color pointer. */
 			glVertexPointer( 3, GL_FLOAT, 0, g_clouds[i].vertices );
-			glColorPointer( 3, GL_FLOAT, 0, g_clouds[i].colors );
+			glColorPointer(  3, GL_FLOAT, 0, g_clouds[i].colors );
 		
 			/* Draw pointcloud */
 			glDrawArrays( GL_POINTS, 0, g_clouds[i].pointcount );
@@ -293,6 +293,32 @@ void drawScene() {
 		for ( i = 0; i < strlen( buf ); i++ ) {
 			glutBitmapCharacter( GLUT_BITMAP_8_BY_13, buf[i] );
 		}
+	}
+
+	/* Draw coordinate axis */
+	if ( g_showcoord ) {
+		glLoadIdentity();
+		glColor4f( 0.0, 1.0, 0.0, 0.0 );
+		glScalef( g_zoom, g_zoom, 1 );
+		glTranslatef( g_translate.x, g_translate.y, g_translate.z );
+		glRotatef( (int) g_rot.tilt, 1, 0, 0 );
+		glRotatef( (int) g_rot.pan,  0, 1, 0 );
+
+		glRasterPos3f( g_maxdim,       0.0f,     0.0f );
+		glutBitmapCharacter( GLUT_BITMAP_8_BY_13, 'X' );
+		glRasterPos3f(     0.0f,   g_maxdim,     0.0f );
+		glutBitmapCharacter( GLUT_BITMAP_8_BY_13, 'Y' );
+		glRasterPos3f(     0.0f,       0.0f, - (float) g_maxdim );
+		glutBitmapCharacter( GLUT_BITMAP_8_BY_13, 'Z' );
+
+		glBegin( GL_LINES );
+		glVertex3i(        0,        0,         0 );
+		glVertex3i( g_maxdim,        0,         0 );
+		glVertex3i(        0,        0,         0 );
+		glVertex3i(        0, g_maxdim,         0 );
+		glVertex3i(        0,        0,         0 );
+		glVertex3i(        0,        0, -g_maxdim );
+		glEnd();
 	}
 
 	glutSwapBuffers();
@@ -474,45 +500,46 @@ void keyPressed( unsigned char key, int x, int y ) {
 	int i;
 	switch ( key ) {
 		case 27:
-			glutDestroyWindow( window );
+			glutDestroyWindow( g_window );
 			exit( EXIT_SUCCESS );
 		case 'j': 
-			translate.x = 0;
-			translate.y = 0;
-			translate.z = 0;
-			rot.pan     = 0;
-			rot.tilt    = 0;
-			zoom        = 1;
+			g_translate.x = 0;
+			g_translate.y = 0;
+			g_translate.z = 0;
+			g_rot.pan     = 0;
+			g_rot.tilt    = 0;
+			g_zoom        = 1;
 			break;
-		case '+': zoom        *= 1.1; break;
-		case '-': zoom        /= 1.1; break;
+		case '+': g_zoom      *= 1.1; break;
+		case '-': g_zoom      /= 1.1; break;
 		/* movement */
-		case 'a': translate.x += 1 * g_movespeed; break;
-		case 'd': translate.x -= 1 * g_movespeed; break;
-		case 'w': translate.z += 1 * g_movespeed; break;
-		case 's': translate.z -= 1 * g_movespeed; break;
-		case 'q': translate.y += 1 * g_movespeed; break;
-		case 'e': translate.y -= 1 * g_movespeed; break;
+		case 'a': g_translate.x += 1 * g_movespeed; break;
+		case 'd': g_translate.x -= 1 * g_movespeed; break;
+		case 'w': g_translate.z += 1 * g_movespeed; break;
+		case 's': g_translate.z -= 1 * g_movespeed; break;
+		case 'q': g_translate.y += 1 * g_movespeed; break;
+		case 'e': g_translate.y -= 1 * g_movespeed; break;
 		/* Uppercase: fast movement */
-		case 'A': translate.x -= 0.1 * g_movespeed; break;
-		case 'D': translate.x += 0.1 * g_movespeed; break;
-		case 'W': translate.z += 0.1 * g_movespeed; break;
-		case 'S': translate.z -= 0.1 * g_movespeed; break;
-		case 'Q': translate.y += 0.1 * g_movespeed; break;
-		case 'E': translate.y -= 0.1 * g_movespeed; break;
+		case 'A': g_translate.x -= 0.1 * g_movespeed; break;
+		case 'D': g_translate.x += 0.1 * g_movespeed; break;
+		case 'W': g_translate.z += 0.1 * g_movespeed; break;
+		case 'S': g_translate.z -= 0.1 * g_movespeed; break;
+		case 'Q': g_translate.y += 0.1 * g_movespeed; break;
+		case 'E': g_translate.y -= 0.1 * g_movespeed; break;
 		/* Mode changes */
 		case 13 : g_mode = VIEWER_MODE_SELECT; break;
 		case 'm': g_mode = VIEWER_MODE_MOVESEL; break;
 		/* Other stuff. */
-		case 'i': pointsize    = pointsize < 2 ? 1 : pointsize - 1; break;
-		case 'o': pointsize    = 1.0; break;
-		case 'p': pointsize   += 1.0; break;
-		case '*': g_movespeed *= 10;  break;
-		case '/': g_movespeed /= 10;  break;
-		case 'x': invertrotx  *= -1;  break;
-		case 'y': invertroty  *= -1;  break;
-		case 'f': rot.tilt    += 180; break;
+		case 'i': g_pointsize   = g_pointsize < 2 ? 1 : g_pointsize - 1; break;
+		case 'o': g_pointsize   = 1.0; break;
+		case 'p': g_pointsize  += 1.0; break;
+		case '*': g_movespeed  *= 10;  break;
+		case '/': g_movespeed  /= 10;  break;
+		case 'x': g_invertrotx *= -1;  break;
+		case 'y': g_invertroty *= -1;  break;
+		case 'f': g_rot.tilt   += 180; break;
 		case 'z': g_clouds[0].rot.y += 1; break;
+		case 'C': g_showcoord = !g_showcoord; break;
 		case 'c': glGetFloatv( GL_COLOR_CLEAR_VALUE, rgb );
 					/* Invert background color */
 					if ( *rgb < 0.9 ) {
@@ -557,8 +584,8 @@ void resizeScene( int w, int h ) {
 
 
    glMatrixMode( GL_MODELVIEW );
-	glEnable( GL_DEPTH_TEST );
-	glDepthFunc( GL_LEQUAL );
+	glEnable(     GL_DEPTH_TEST );
+	glDepthFunc(  GL_LEQUAL );
 
 }
 
@@ -580,7 +607,7 @@ void init() {
 	glutInitDisplayMode( GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH );
 
    glutInitWindowSize( 640, 480 );
-	window = glutCreateWindow( "ptsViewer" );
+	g_window = glutCreateWindow( "ptsViewer" );
 
 	glutDisplayFunc(  &drawScene );
 	glutReshapeFunc(  &resizeScene );
@@ -633,7 +660,7 @@ int main( int argc, char ** argv ) {
 	}
 
 	/* Prepare array */
-	g_clouds = (cloud *) malloc( (argc - 1) * sizeof( cloud ) );
+	g_clouds = (cloud_t *) malloc( (argc - 1) * sizeof( cloud_t ) );
 	if ( !g_clouds ) {
 		fprintf( stderr, "Could not allocate memory for pointclouds!\n" );
 		exit( EXIT_FAILURE );
@@ -643,7 +670,7 @@ int main( int argc, char ** argv ) {
 	/* Load pts file */
 	int i;
 	for ( i = 0; i < g_cloudcount; i++ ) {
-		memset( g_clouds + i, 0, sizeof( cloud ) );
+		memset( g_clouds + i, 0, sizeof( cloud_t ) );
 		loadPts( argv[ i + 1 ], i );
 		g_clouds[i].name = argv[ i + 1 ];
 		g_clouds[i].enabled = 1;
@@ -674,21 +701,22 @@ void printHelp() {
 			" wheel       Move forward, backward (fact)\n"
 			"-- Keyboard (normal mode): ---\n"
 			" i,o,p       Increase, reset, decrease pointsize\n"
-			" a,d         Move left, right (fast)\n"
-			" w,s         Move forward, backward (fast)\n"
-			" q,e         Move up, down (fast)\n"
-			" A,D         Move left, right (slow)\n"
-			" W,S         Move forward, backward (slow)\n"
-			" Q,E         Move up, down (slow)\n"
+			" a,d         Move left, right\n"
+			" w,s         Move forward, backward\n"
+			" q,e         Move up, down\n"
+/*			" A,D         Move left, right (slow)\n"       */
+/*			" W,S         Move forward, backward (slow)\n" */
+/*			" Q,E         Move up, down (slow)\n"          */
 			" j           Jump to start position\n"
-			" f           Flip pointcloud\n"
-			" y,x         Invert rotation\n"
+/*			" f           Flip pointcloud\n"               */
+/*			" y,x         Invert rotation\n"               */
 			" +,-         Zoom in, out\n"
 			" *,/         Increase/Decrease movement speed\n"
 			" 0...9       Toggle visibility of pointclouds 0 to 9\n"
 			" t           Toggle visibility of all pointclouds\n"
 			" u           Unselect all clouds\n"
 			" c           Invert background color\n"
+			" C           Toggle coordinate axis\n"
 			" <return>    Enter selection mode\n"
 			" m           Enter move mode\n"
 			" <esc>       Quit\n"
@@ -700,15 +728,15 @@ void printHelp() {
 			" a,d         Move left, right (fast)\n"
 			" w,s         Move forward, backward (fast)\n"
 			" q,e         Move up, down (fast)\n"
-			" A,D         Move left, right (slow)\n"
-			" W,S         Move forward, backward (slow)\n"
-			" Q,E         Move up, down (slow)\n"
+/*			" A,D         Move left, right (slow)\n"       */
+/*			" W,S         Move forward, backward (slow)\n" */
+/*			" Q,E         Move up, down (slow)\n"          */
 			" r,f         Rotate around x-axis\n"
 			" t,g         Rotate around y-axis\n"
 			" z,h         Rotate around z-axis\n"
-			" R,F         Rotate around x-axis (slow)\n"
-			" T,G         Rotate around y-axis (slow)\n"
-			" Z,H         Rotate around z-axis (slow)\n"
+/*			" R,F         Rotate around x-axis (slow)\n" */
+/*			" T,G         Rotate around y-axis (slow)\n" */
+/*			" Z,H         Rotate around z-axis (slow)\n" */
 			" p           Print pose\n"
 			" P           Generate pose files in current directory\n"
 			" l           Load pose files for selected clouds from current directory.\n"

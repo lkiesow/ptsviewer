@@ -32,7 +32,7 @@ void drawScene();
 void keyPressed( unsigned char key, int x, int y );
 void resizeScene( int w, int h );
 void init();
-int main( int argc, char ** argv );
+int  main( int argc, char ** argv );
 void printHelp();
 
 /* Type definitions */
@@ -40,49 +40,45 @@ typedef struct {
 	GLdouble x;
 	GLdouble y;
 	GLdouble z;
-} coord3d;
+} coord3d_t;
 
 typedef struct {
-	float *  vertices;
-	float *  colors;
-	uint32_t pointcount;
-	int      enabled;
-	coord3d  trans;
-	coord3d  rot;
-	int      selected;
-	char *   name;
-} cloud;
+	float *    vertices;
+	float *    colors;
+	uint32_t   pointcount;
+	int        enabled;
+	coord3d_t  trans;
+	coord3d_t  rot;
+	int        selected;
+	char *     name;
+} cloud_t;
 
-/* Global variables */
-coord3d translate = { 
-	0.0, /* x */
-	0.0, /* y */
-	0.0 /* z */
-};
-
-int window;
-int mx = -1;
-int my = -1;
-// int rotangles[2] = {0};
-struct {
+typedef struct {
 	float pan;
 	float tilt;
-} rot = {
-	0.0f,
-	0.0f
-};
-int last_mousebtn;
-int invertrotx = -1;
-int invertroty = -1;
-float zoom = 1;
-int color = 1;
-float pointsize  = 1.0f;
-cloud * g_clouds = NULL;
-uint32_t g_cloudcount;
-uint32_t maxdim  = 0;
-char     g_selection[1024] = "";
-float    g_movespeed = 1;
-int      g_left = -75;
+} pantilt_t;
+
+
+
+/* Global variables */
+coord3d_t g_translate       = { 0.0, 0.0, 0.0 };
+pantilt_t g_rot             =    { 0.0f, 0.0f };
+int       g_window          =                 0;
+int       g_mx              =                -1;
+int       g_my              =                -1;
+int       g_last_mousebtn   =                -1;
+int       g_invertrotx      =                -1;
+int       g_invertroty      =                -1;
+float     g_zoom            =                 1;
+int       g_color           =                 1;
+float     g_pointsize       =              1.0f;
+cloud_t * g_clouds          =              NULL;
+uint32_t  g_cloudcount      =                 0;
+uint32_t  g_maxdim          =                 0;
+int       g_showcoord       =                 0;
+char      g_selection[1024] =                "";
+float     g_movespeed       =                 1;
+int       g_left            =               -75;
 
 /* Define viewer modes */
 
