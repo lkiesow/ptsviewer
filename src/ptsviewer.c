@@ -16,6 +16,110 @@
 
 
 /*******************************************************************************
+ *         Name:  ply_vertex_cb
+ *  Description:  
+ ******************************************************************************/
+int ply_vertex_cb( p_ply_argument argument ) {
+
+	float ** vertex;
+	int eol = 0;
+	ply_get_argument_user_data( argument, (void *) &vertex, &eol );
+	if ( eol ) {
+		**vertex = -ply_get_argument_value( argument );
+	} else {
+		**vertex =  ply_get_argument_value( argument );
+	}
+	g_maxdim = g_maxdim > fabs( **vertex ) ? g_maxdim : fabs( **vertex );
+	(*vertex)++;
+	return 1;
+
+}
+
+
+/*******************************************************************************
+ *         Name:  ply_color_cb
+ *  Description:  
+ ******************************************************************************/
+int ply_color_cb( p_ply_argument argument ) {
+
+	float ** color;
+	ply_get_argument_user_data( argument, (void *) &color, NULL );
+	**color = ply_get_argument_value( argument ) / 255.0f;
+	(*color)++;
+	return 1;
+
+}
+
+
+/*******************************************************************************
+ *         Name:  loadPly
+ *  Description:  Load a ply file into memory.
+ ******************************************************************************/
+void loadPly( char * filename, size_t idx ) {
+
+	p_ply ply = ply_open( filename, NULL );
+
+	if ( !ply ) {
+		fprintf( stderr, "error: Could not open »%s«.\n", filename );
+		exit( EXIT_FAILURE );
+	}
+	if ( !ply_read_header( ply ) ) {
+		fprintf( stderr, "error: Could not read header.\n" );
+		exit( EXIT_FAILURE );
+	}
+
+	/* Check if there are vertices and get the amount of vertices. */
+	char elem_name[256] = "";
+	const char * s = elem_name;
+	int32_t nvertices = 0;
+	p_ply_element elem = NULL;
+	while ( ( elem = ply_get_next_element( ply, elem ) ) ) {
+		ply_get_element_info( elem, &s, &nvertices );
+		if ( !strcmp( elem_name, "vertex" ) ) {
+			break;
+		}
+	}
+	if ( !nvertices ) {
+		fprintf( stderr, "warning: No vertices in ply.\n" );
+		return;
+	}
+
+	/* Allocate memory. */
+	g_clouds[ idx ].pointcount = nvertices;
+	nvertices++;
+	g_clouds[ idx ].vertices   = ( float * ) malloc( nvertices * 3 * sizeof(float) );
+	g_clouds[ idx ].colors     = ( float * ) malloc( nvertices * 3 * sizeof(float) );
+	
+	float * vertex = g_clouds[ idx ].vertices;
+	float * color  = g_clouds[ idx ].colors;
+
+	/* Set callbacks. */
+	ply_set_read_cb( ply, "vertex", "x",     ply_vertex_cb, &vertex, 0 );
+	ply_set_read_cb( ply, "vertex", "y",     ply_vertex_cb, &vertex, 0 );
+	ply_set_read_cb( ply, "vertex", "z",     ply_vertex_cb, &vertex, 1 );
+
+	ply_set_read_cb( ply, "vertex", "red",   ply_color_cb,  &color,  0 );
+	ply_set_read_cb( ply, "vertex", "green", ply_color_cb,  &color,  0 );
+	ply_set_read_cb( ply, "vertex", "blue",  ply_color_cb,  &color,  1 );
+	
+	if ( color == g_clouds[ idx ].colors ) {
+		int i;
+		for ( i = 0; i < nvertices * 3; i++ ) {
+			*color = 1.0f;
+			color++;
+		}
+	}
+
+	/* Read ply file. */
+	if ( !ply_read( ply ) ) {
+		fprintf( stderr, "error: could not read »%s«.\n", filename );
+//		exit( EXIT_FAILURE );
+	}
+	ply_close( ply );
+
+}
+
+/*******************************************************************************
  *         Name:  load_pts
  *  Description:  Load a pts file into memory.
  ******************************************************************************/
@@ -60,13 +164,13 @@ void loadPts( char * ptsfile, size_t idx ) {
 	/* Start from the beginning */
 	fseek( f, 0, SEEK_SET );
 
-	unsigned int maxval = 0;
+	float maxval = 0.0f;
 	while ( !feof( f ) ) {
 		fscanf( f, "%f %f %f", vert_pos, vert_pos+1, vert_pos+2 );
 		vert_pos[2] *= -1; /* z */
-		if ( abs( vert_pos[0] ) > maxval ) { maxval = abs( vert_pos[0] ); }
-		if ( abs( vert_pos[1] ) > maxval ) { maxval = abs( vert_pos[1] ); }
-		if ( abs( vert_pos[2] ) > maxval ) { maxval = abs( vert_pos[2] ); }
+		if ( fabs( vert_pos[0] ) > maxval ) { maxval = fabs( vert_pos[0] ); }
+		if ( fabs( vert_pos[1] ) > maxval ) { maxval = fabs( vert_pos[1] ); }
+		if ( fabs( vert_pos[2] ) > maxval ) { maxval = fabs( vert_pos[2] ); }
 		vert_pos += 3;
 		for ( i = 0; i < dummy_count; i++ ) {
 			fscanf( f, "%f", &dummy );
@@ -113,10 +217,12 @@ void loadPts( char * ptsfile, size_t idx ) {
 	}
 
 	/* Normalize size of pointclouds. */
+	/*
 	unsigned int factor = 1;
 	while ( factor * 100 < maxval ) {
 		factor *= 10;
 	}
+	*/
 	g_maxdim = g_maxdim > maxval ? g_maxdim : maxval;
 	/*
 	if ( factor > 1 ) {
@@ -644,6 +750,32 @@ void cleanup() {
 
 
 /*******************************************************************************
+ *         Name:  determineFileFormat
+ *  Description:  
+ ******************************************************************************/
+uint8_t determineFileFormat( char * filename ) {
+	
+	char * ext = strrchr( filename, '.' );
+	if ( !strcmp( ext, ".pts" ) || !strcmp( ext, ".3d" ) ) {
+		printf( "--%s--\n", ext );
+		return FILE_FORMAT_UOS;
+	} else if ( !strcmp( ext, ".ply" ) ) {
+		FILE * f = fopen( filename, "r" );
+		if ( f ) {
+			char magic_number[5] = { 0 };
+			fread( magic_number, 1, 4, f );
+			if ( !strcmp( magic_number, "ply\n" ) ) {
+				return FILE_FORMAT_PLY;
+			}
+			fclose( f );
+		}
+	}
+	return FILE_FORMAT_NONE;
+
+}
+
+
+/*******************************************************************************
  *         Name:  main
  *  Description:  Main function
  ******************************************************************************/
@@ -671,7 +803,13 @@ int main( int argc, char ** argv ) {
 	int i;
 	for ( i = 0; i < g_cloudcount; i++ ) {
 		memset( g_clouds + i, 0, sizeof( cloud_t ) );
-		loadPts( argv[ i + 1 ], i );
+		switch ( determineFileFormat( argv[ i + 1 ] ) ) {
+			case FILE_FORMAT_UOS:
+				loadPts( argv[ i + 1 ], i );
+				break;
+			case FILE_FORMAT_PLY:
+				loadPly( argv[ i + 1 ], i );
+		}
 		g_clouds[i].name = argv[ i + 1 ];
 		g_clouds[i].enabled = 1;
 	}

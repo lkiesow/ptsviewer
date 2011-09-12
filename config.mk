@@ -17,7 +17,7 @@ MLIB   =-lm
 
 # includes and libs
 INCS=-I. -I/usr/X11/include/ ${GLINC} ${GLUINC} ${GLUTINC}
-LIBS=-L/usr/lib ${GLLIB} ${GLULIB} ${GLUTLIB} ${MLIB}
+LIBS=-L/usr/lib ${GLLIB} ${GLULIB} ${GLUTLIB} ${MLIB} -lrply
 
 # dirs for source and object files
 OBJDIR   = obj

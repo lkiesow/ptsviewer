@@ -23,6 +23,12 @@
 #include <stdlib.h>
 #include <libgen.h>
 #include <math.h>
+#include "rply.h"
+#include "pts.h"
+
+#define FILE_FORMAT_NONE 0
+#define FILE_FORMAT_UOS  1
+#define FILE_FORMAT_PLY  2
 
 /* Functions */
 void loadPts( char * ptsfile, size_t idx );
@@ -34,6 +40,7 @@ void resizeScene( int w, int h );
 void init();
 int  main( int argc, char ** argv );
 void printHelp();
+uint8_t determineFileFormat( char * filename );
 
 /* Type definitions */
 typedef struct {
@@ -61,24 +68,24 @@ typedef struct {
 
 
 /* Global variables */
-coord3d_t g_translate       = { 0.0, 0.0, 0.0 };
-pantilt_t g_rot             =    { 0.0f, 0.0f };
-int       g_window          =                 0;
-int       g_mx              =                -1;
-int       g_my              =                -1;
-int       g_last_mousebtn   =                -1;
-int       g_invertrotx      =                -1;
-int       g_invertroty      =                -1;
-float     g_zoom            =                 1;
-int       g_color           =                 1;
-float     g_pointsize       =              1.0f;
-cloud_t * g_clouds          =              NULL;
-uint32_t  g_cloudcount      =                 0;
-uint32_t  g_maxdim          =                 0;
-int       g_showcoord       =                 0;
-char      g_selection[1024] =                "";
-float     g_movespeed       =                 1;
-int       g_left            =               -75;
+coord3d_t g_translate       =  { 0.0, 0.0, 0.0 };
+pantilt_t g_rot             =     { 0.0f, 0.0f };
+int       g_window          =                  0;
+int       g_mx              =                 -1;
+int       g_my              =                 -1;
+int       g_last_mousebtn   =                 -1;
+int       g_invertrotx      =                 -1;
+int       g_invertroty      =                 -1;
+float     g_zoom            =                  1;
+int       g_color           =                  1;
+float     g_pointsize       =               1.0f;
+cloud_t * g_clouds          =               NULL;
+uint32_t  g_cloudcount      =                  0;
+float     g_maxdim          =                  0;
+int       g_showcoord       =                  0;
+char      g_selection[1024] =                 "";
+float     g_movespeed       =                  1;
+int       g_left            =                -75;
 
 /* Define viewer modes */
 
@@ -86,4 +93,4 @@ int       g_left            =               -75;
 #define VIEWER_MODE_SELECT  1
 #define VIEWER_MODE_MOVESEL 2
 
-int g_mode = VIEWER_MODE_NORMAL;
+int       g_mode            = VIEWER_MODE_NORMAL;

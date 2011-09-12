@@ -33,6 +33,8 @@ REQUIRED LIBRARIES
  + OpenGL
  + The OpenGL utility toolkit
  + The OpenGL utility library
+ + librply
+    - https://github.com/lkiesow/librply
 
 
 Installation on Ubuntu:
