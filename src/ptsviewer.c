@@ -19,7 +19,7 @@
  *         Name:  ply_vertex_cb
  *  Description:  
  ******************************************************************************/
-int ply_vertex_cb( p_ply_argument argument ) {
+int plyVertexCb( p_ply_argument argument ) {
 
 	float ** vertex;
 	int eol = 0;
@@ -40,7 +40,7 @@ int ply_vertex_cb( p_ply_argument argument ) {
  *         Name:  ply_color_cb
  *  Description:  
  ******************************************************************************/
-int ply_color_cb( p_ply_argument argument ) {
+int plyColorCb( p_ply_argument argument ) {
 
 	float ** color;
 	ply_get_argument_user_data( argument, (void *) &color, NULL );
@@ -56,6 +56,8 @@ int ply_color_cb( p_ply_argument argument ) {
  *  Description:  Load a ply file into memory.
  ******************************************************************************/
 void loadPly( char * filename, size_t idx ) {
+
+	printf( "Loading »%s«…\n", filename );
 
 	p_ply ply = ply_open( filename, NULL );
 
@@ -94,14 +96,22 @@ void loadPly( char * filename, size_t idx ) {
 	float * color  = g_clouds[ idx ].colors;
 
 	/* Set callbacks. */
-	ply_set_read_cb( ply, "vertex", "x",     ply_vertex_cb, &vertex, 0 );
-	ply_set_read_cb( ply, "vertex", "y",     ply_vertex_cb, &vertex, 0 );
-	ply_set_read_cb( ply, "vertex", "z",     ply_vertex_cb, &vertex, 1 );
+	ply_set_read_cb( ply, "vertex", "x",     plyVertexCb, &vertex, 0 );
+	ply_set_read_cb( ply, "vertex", "y",     plyVertexCb, &vertex, 0 );
+	ply_set_read_cb( ply, "vertex", "z",     plyVertexCb, &vertex, 1 );
 
-	ply_set_read_cb( ply, "vertex", "red",   ply_color_cb,  &color,  0 );
-	ply_set_read_cb( ply, "vertex", "green", ply_color_cb,  &color,  0 );
-	ply_set_read_cb( ply, "vertex", "blue",  ply_color_cb,  &color,  1 );
+	ply_set_read_cb( ply, "vertex", "red",   plyColorCb,  &color,  0 );
+	ply_set_read_cb( ply, "vertex", "green", plyColorCb,  &color,  0 );
+	ply_set_read_cb( ply, "vertex", "blue",  plyColorCb,  &color,  1 );
+
+	/* Read ply file. */
+	if ( !ply_read( ply ) ) {
+		fprintf( stderr, "error: could not read »%s«.\n", filename );
+		exit( EXIT_FAILURE );
+	}
+	ply_close( ply );
 	
+	/* Check if we already have color information. */
 	if ( color == g_clouds[ idx ].colors ) {
 		int i;
 		for ( i = 0; i < nvertices * 3; i++ ) {
@@ -109,13 +119,6 @@ void loadPly( char * filename, size_t idx ) {
 			color++;
 		}
 	}
-
-	/* Read ply file. */
-	if ( !ply_read( ply ) ) {
-		fprintf( stderr, "error: could not read »%s«.\n", filename );
-//		exit( EXIT_FAILURE );
-	}
-	ply_close( ply );
 
 }
 
@@ -250,16 +253,9 @@ void mouseMoved( int x, int y ) {
 			glutPostRedisplay();
 		}
 	} else if ( g_last_mousebtn == GLUT_RIGHT_BUTTON ) {
-		if ( g_maxdim > 100 ) {
-			g_translate.y -= ( y - g_my );
-			g_translate.x += ( x - g_mx );
-		} else if ( g_maxdim > 10 ) {
-			g_translate.y -= ( y - g_my ) / 10.0f;
-			g_translate.x += ( x - g_mx ) / 10.0f;
-		} else {
-			g_translate.y -= ( y - g_my ) / 100.0f;
-			g_translate.x += ( x - g_mx ) / 100.0f;
-		}
+		printf( "%f\n", g_maxdim );
+		g_translate.y -= ( y - g_my ) / 1000.0f * g_maxdim;
+		g_translate.x += ( x - g_mx ) / 1000.0f * g_maxdim;
 		glutPostRedisplay();
 	}
 	g_mx = x;
@@ -757,7 +753,6 @@ uint8_t determineFileFormat( char * filename ) {
 	
 	char * ext = strrchr( filename, '.' );
 	if ( !strcmp( ext, ".pts" ) || !strcmp( ext, ".3d" ) ) {
-		printf( "--%s--\n", ext );
 		return FILE_FORMAT_UOS;
 	} else if ( !strcmp( ext, ".ply" ) ) {
 		FILE * f = fopen( filename, "r" );
