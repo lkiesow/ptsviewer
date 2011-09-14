@@ -253,7 +253,6 @@ void mouseMoved( int x, int y ) {
 			glutPostRedisplay();
 		}
 	} else if ( g_last_mousebtn == GLUT_RIGHT_BUTTON ) {
-		printf( "%f\n", g_maxdim );
 		g_translate.y -= ( y - g_my ) / 1000.0f * g_maxdim;
 		g_translate.x += ( x - g_mx ) / 1000.0f * g_maxdim;
 		glutPostRedisplay();
