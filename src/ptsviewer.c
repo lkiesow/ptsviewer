@@ -639,7 +639,6 @@ void keyPressed( unsigned char key, int x, int y ) {
 		case 'x': g_invertrotx *= -1;  break;
 		case 'y': g_invertroty *= -1;  break;
 		case 'f': g_rot.tilt   += 180; break;
-		case 'z': g_clouds[0].rot.y += 1; break;
 		case 'C': g_showcoord = !g_showcoord; break;
 		case 'c': glGetFloatv( GL_COLOR_CLEAR_VALUE, rgb );
 					/* Invert background color */
@@ -751,6 +750,9 @@ void cleanup() {
 uint8_t determineFileFormat( char * filename ) {
 	
 	char * ext = strrchr( filename, '.' );
+	if ( !ext ) {
+		return FILE_FORMAT_NONE;
+	}
 	if ( !strcmp( ext, ".pts" ) || !strcmp( ext, ".3d" ) ) {
 		return FILE_FORMAT_UOS;
 	} else if ( !strcmp( ext, ".ply" ) ) {
@@ -798,11 +800,12 @@ int main( int argc, char ** argv ) {
 	for ( i = 0; i < g_cloudcount; i++ ) {
 		memset( g_clouds + i, 0, sizeof( cloud_t ) );
 		switch ( determineFileFormat( argv[ i + 1 ] ) ) {
-			case FILE_FORMAT_UOS:
-				loadPts( argv[ i + 1 ], i );
-				break;
 			case FILE_FORMAT_PLY:
 				loadPly( argv[ i + 1 ], i );
+				break;
+			case FILE_FORMAT_UOS:
+			default:
+				loadPts( argv[ i + 1 ], i );
 		}
 		g_clouds[i].name = argv[ i + 1 ];
 		g_clouds[i].enabled = 1;
