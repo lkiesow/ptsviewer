@@ -23,8 +23,7 @@
 #include <stdlib.h>
 #include <libgen.h>
 #include <math.h>
-#include "rply.h"
-#include "pts.h"
+#include <rply.h>
 
 #define FILE_FORMAT_NONE 0
 #define FILE_FORMAT_UOS  1
