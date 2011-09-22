@@ -50,7 +50,7 @@ typedef struct {
 
 typedef struct {
 	float *    vertices;
-	float *    colors;
+	uint8_t *  colors;
 	uint32_t   pointcount;
 	int        enabled;
 	coord3d_t  trans;

@@ -42,9 +42,9 @@ int plyVertexCb( p_ply_argument argument ) {
  ******************************************************************************/
 int plyColorCb( p_ply_argument argument ) {
 
-	float ** color;
+	uint8_t ** color;
 	ply_get_argument_user_data( argument, (void *) &color, NULL );
-	**color = ply_get_argument_value( argument ) / 255.0f;
+	**color = (unsigned int) ply_get_argument_value( argument );
 	(*color)++;
 	return 1;
 
@@ -71,13 +71,22 @@ void loadPly( char * filename, size_t idx ) {
 	}
 
 	/* Check if there are vertices and get the amount of vertices. */
-	char elem_name[256] = "";
-	const char * s = elem_name;
+	char buf[256] = "";
+	const char * name = buf;
 	int32_t nvertices = 0;
 	p_ply_element elem = NULL;
 	while ( ( elem = ply_get_next_element( ply, elem ) ) ) {
-		ply_get_element_info( elem, &s, &nvertices );
-		if ( !strcmp( elem_name, "vertex" ) ) {
+		ply_get_element_info( elem, &name, &nvertices );
+		if ( !strcmp( name, "vertex" ) ) {
+			p_ply_property prop = NULL;
+			while ( ( prop = ply_get_next_property( elem, prop ) ) ) {
+				ply_get_property_info( prop, &name, NULL, NULL, NULL );
+				if ( !strcmp( name, "red" ) ) {
+					/* We have color information */
+					g_clouds[ idx ].colors = ( uint8_t * ) 
+						malloc( nvertices * 3 * sizeof(uint8_t) );
+				}
+			}
 			break;
 		}
 	}
@@ -90,19 +99,20 @@ void loadPly( char * filename, size_t idx ) {
 	g_clouds[ idx ].pointcount = nvertices;
 	nvertices++;
 	g_clouds[ idx ].vertices   = ( float * ) malloc( nvertices * 3 * sizeof(float) );
-	g_clouds[ idx ].colors     = ( float * ) malloc( nvertices * 3 * sizeof(float) );
 	
 	float * vertex = g_clouds[ idx ].vertices;
-	float * color  = g_clouds[ idx ].colors;
+	uint8_t * color  = g_clouds[ idx ].colors;
 
 	/* Set callbacks. */
 	ply_set_read_cb( ply, "vertex", "x",     plyVertexCb, &vertex, 0 );
 	ply_set_read_cb( ply, "vertex", "y",     plyVertexCb, &vertex, 0 );
 	ply_set_read_cb( ply, "vertex", "z",     plyVertexCb, &vertex, 1 );
 
-	ply_set_read_cb( ply, "vertex", "red",   plyColorCb,  &color,  0 );
-	ply_set_read_cb( ply, "vertex", "green", plyColorCb,  &color,  0 );
-	ply_set_read_cb( ply, "vertex", "blue",  plyColorCb,  &color,  1 );
+	if ( color ) {
+		ply_set_read_cb( ply, "vertex", "red",   plyColorCb,  &color,  0 );
+		ply_set_read_cb( ply, "vertex", "green", plyColorCb,  &color,  0 );
+		ply_set_read_cb( ply, "vertex", "blue",  plyColorCb,  &color,  1 );
+	}
 
 	/* Read ply file. */
 	if ( !ply_read( ply ) ) {
@@ -110,15 +120,6 @@ void loadPly( char * filename, size_t idx ) {
 		exit( EXIT_FAILURE );
 	}
 	ply_close( ply );
-	
-	/* Check if we already have color information. */
-	if ( color == g_clouds[ idx ].colors ) {
-		int i;
-		for ( i = 0; i < nvertices * 3; i++ ) {
-			*color = 1.0f;
-			color++;
-		}
-	}
 
 }
 
@@ -159,9 +160,9 @@ void loadPts( char * ptsfile, size_t idx ) {
 
 	float * vert_pos = g_clouds[ idx ].vertices;
 	if ( read_color ) {
-		g_clouds[ idx ].colors = realloc( g_clouds[ idx ].colors, 3000000 * sizeof(float) );
+		g_clouds[ idx ].colors = realloc( g_clouds[ idx ].colors, 3000000 * sizeof(uint8_t) );
 	}
-	float * color_pos = g_clouds[ idx ].colors;
+	uint8_t * color_pos = g_clouds[ idx ].colors;
 	int i;
 
 	/* Start from the beginning */
@@ -181,9 +182,9 @@ void loadPts( char * ptsfile, size_t idx ) {
 		if ( read_color ) {
 			unsigned int r, g, b;
 			fscanf( f, "%u %u %u", &r, &g, &b );
-			*(color_pos++) = r / 255.0f;
-			*(color_pos++) = g / 255.0f;
-			*(color_pos++) = b / 255.0f;
+			*(color_pos++) = r;
+			*(color_pos++) = g;
+			*(color_pos++) = b;
 		}
 		g_clouds[ idx ].pointcount++;
 		if ( g_clouds[ idx ].pointcount % 100000 == 0 ) {
@@ -197,7 +198,7 @@ void loadPts( char * ptsfile, size_t idx ) {
 			vert_pos = g_clouds[ idx ].vertices + 3 * g_clouds[ idx ].pointcount;
 			if ( g_clouds[ idx ].colors ) {
 				g_clouds[ idx ].colors = realloc( g_clouds[ idx ].colors, 
-						g_clouds[ idx ].pointcount * 6 * sizeof(float) );
+						g_clouds[ idx ].pointcount * 6 * sizeof(uint8_t) );
 				color_pos = g_clouds[ idx ].colors + 3 * g_clouds[ idx ].pointcount;
 			}
 		}
@@ -206,14 +207,16 @@ void loadPts( char * ptsfile, size_t idx ) {
 	printf( "  %u values read.\nPointcloud loaded.\n", g_clouds[ idx ].pointcount );
 
 	/* Fill color array if we did not get any color information from a file */
+	/*
 	if ( !g_clouds[ idx ].colors ) {
 		g_clouds[ idx ].colors = realloc( g_clouds[ idx ].colors, 
-				g_clouds[ idx ].pointcount * 3 * sizeof(float) );
-		float * c = g_clouds[ idx ].colors;
+				g_clouds[ idx ].pointcount * 3 * sizeof(uint8_t) );
+		uint8_t * c = g_clouds[ idx ].colors;
 		for ( ; c < g_clouds[ idx ].colors + ( g_clouds[ idx ].pointcount * 3 ); c++ ) {
-			*c = 1.0f;
+			*c = 255;
 		}
 	}
+	*/
 
 	if ( f ) {
 		fclose( f );
@@ -300,7 +303,6 @@ void drawScene() {
 //	glColor4f(1.0, 1.0, 1.0, 1.0);
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-	glEnableClientState( GL_COLOR_ARRAY );
 	glEnableClientState( GL_VERTEX_ARRAY );
 	/* Set point size */
 	glPointSize( g_pointsize );
@@ -309,6 +311,20 @@ void drawScene() {
 	for ( i = 0; i < g_cloudcount; i++ ) {
 		if ( g_clouds[i].enabled ) {
 			glLoadIdentity();
+
+			/* Enable colorArray. */
+			if ( g_clouds[i].colors ) {
+				glEnableClientState( GL_COLOR_ARRAY );
+			} else {
+				/* Set cloudcolor to opposite of background color. */
+				float rgb[3];
+				glGetFloatv( GL_COLOR_CLEAR_VALUE, rgb );
+				if ( *rgb < 0.5 ) {
+					glColor3f( 1.0f, 1.0f, 1.0f );
+				} else {
+					glColor3f( 0.0f, 0.0f, 0.0f );
+				}
+			}
 
 			/* Apply scale, rotation and translation. */
 			/* Global (all points) */
@@ -328,16 +344,22 @@ void drawScene() {
 
 			/* Set vertex and color pointer. */
 			glVertexPointer( 3, GL_FLOAT, 0, g_clouds[i].vertices );
-			glColorPointer(  3, GL_FLOAT, 0, g_clouds[i].colors );
+			if ( g_clouds[i].colors ) {
+				glColorPointer(  3, GL_UNSIGNED_BYTE, 0, g_clouds[i].colors );
+			}
 		
 			/* Draw pointcloud */
 			glDrawArrays( GL_POINTS, 0, g_clouds[i].pointcount );
+
+			/* Disable colorArray. */
+			if ( g_clouds[i].colors ) {
+				glDisableClientState( GL_COLOR_ARRAY );
+			}
 		}
 	}
 
 	/* Reset ClientState */
 	glDisableClientState( GL_VERTEX_ARRAY );
-	glDisableClientState( GL_COLOR_ARRAY );
 
 
 
