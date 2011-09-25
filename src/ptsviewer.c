@@ -22,7 +22,7 @@
 int plyVertexCb( p_ply_argument argument ) {
 
 	float ** vertex;
-	int eol = 0;
+	long int eol = 0;
 	ply_get_argument_user_data( argument, (void *) &vertex, &eol );
 	if ( eol ) {
 		**vertex = -ply_get_argument_value( argument );
@@ -59,7 +59,7 @@ void loadPly( char * filename, size_t idx ) {
 
 	printf( "Loading »%s«…\n", filename );
 
-	p_ply ply = ply_open( filename, NULL );
+	p_ply ply = ply_open( filename, NULL, 0, NULL );
 
 	if ( !ply ) {
 		fprintf( stderr, "error: Could not open »%s«.\n", filename );
@@ -73,7 +73,7 @@ void loadPly( char * filename, size_t idx ) {
 	/* Check if there are vertices and get the amount of vertices. */
 	char elem_name[256] = "";
 	const char * s = elem_name;
-	int32_t nvertices = 0;
+	long int nvertices = 0;
 	p_ply_element elem = NULL;
 	while ( ( elem = ply_get_next_element( ply, elem ) ) ) {
 		ply_get_element_info( elem, &s, &nvertices );
