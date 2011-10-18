@@ -1,5 +1,5 @@
 # ptsviewer version
-VERSION = 0.6.1
+VERSION = 0.7
 
 # Customize below to fit your system
 

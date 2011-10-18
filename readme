@@ -1,13 +1,15 @@
 ABOUT
 ================================================================================
-ptsviewer is a simple OpenGL based viewer for pointclouds stored in a pts file.
-Both colored and non colored pointclouds are supported. Multiple clouds can be
-loaded and pose estimations for matching can be created.
+ptsviewer is a simple OpenGL based viewer for point clouds stored as pts or ply
+file. In Ply files the either the element “vertex” or the element “point” is
+loaded as point cloud data. If both elements are present, the “point” element
+data is preferred.  Both colored and non colored point clouds are supported.
+Multiple clouds can be loaded and pose estimations for matching can be created.
 
 
 PTS FILE FORMAT
 ================================================================================
-The pts file format is designed to store pointclouds in a simple, human
+The pts file format is designed to store point clouds in a simple, human
 readable way. Each point is stored as a couple of values in one line of the pts
 file. One line contains at least three values, representing the x-, y- and
 z-position of the point in a three-dimensional cartesian coordinate system. If
@@ -47,7 +49,7 @@ Installation on Fedora:
 COMPILATION / INSTALLATION
 ================================================================================
 
-Edit config.mk (probably no changes have to be made) and call for cimpilation:
+Edit config.mk (probably no changes have to be made) and call for compilation:
 
 > make
 
@@ -62,11 +64,11 @@ CONTROLS
 For more details have a look at the manpage for ptsviewer.
 
 -- Mouse: ---
- drag left   Rotate pointcloud
+ drag left   Rotate point cloud
  drag right  Move up/down, left/right
  wheel       Move forward, backward (fact)
 -- Keyboard (normal mode): ---
- i,o,p       Increase, reset, decrease pointsize
+ i,o,p       Increase, reset, decrease point size
  a,d         Move left, right (fast)
  w,s         Move forward, backward (fast)
  q,e         Move up, down (fast)
@@ -74,13 +76,13 @@ For more details have a look at the manpage for ptsviewer.
  W,S         Move forward, backward (slow)
  Q,E         Move up, down (slow)
  j           Jump to start position
- f           Flip pointcloud
+ f           Flip point cloud
  y,x         Invert rotation
  +,-         Zoom in, out
  *,/         Increase/Decrease movement speed
- 0...9       Toggle visibility of pointclouds 0 to 9
- t           Toggle visibility of all pointclouds
- u           Unselect all clouds
+ 0...9       Toggle visibility of point clouds 0 to 9
+ t           Toggle visibility of all point clouds
+ u           Deselect all clouds
  c           Invert background color
  <return>    Enter selection mode
  m           Enter move mode

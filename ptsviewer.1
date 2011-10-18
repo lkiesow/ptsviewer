@@ -1,15 +1,17 @@
 .TH PTSVIEVER 1 ptsviewer\-VERSION
 .SH NAME
-ptsviewer \- simple pointcloud viewer
+ptsviewer \- simple point cloud viewer
 .SH SYNOPSIS
 .B ptsviewer
 .RB "ptsfile1 [ptsfile2 ...]"
 .SH DESCRIPTION
-ptsviewer is a simple OpenGL based viewer for pointclouds stored in a pts file.
-Both colored and non colored pointclouds are supported. Multiple clouds can be
-loaded and pose estimations for matching can be created.
+ptsviewer is a simple OpenGL based viewer for point clouds stored as pts or ply
+file. In Ply files the either the element “vertex” or the element “point” is
+loaded as point cloud data. If both elements are present, the “point” element
+data is preferred.  Both colored and non colored point clouds are supported.
+Multiple clouds can be loaded and pose estimations for matching can be created.
 .SH PTS FILE FORMAT
-The pts file format is designed to store pointclouds in a simple, human
+The pts file format is designed to store point clouds in a simple, human
 readable way. Each point is stored as a couple of values in one line of the pts
 file. One line contains at least three values, representing the x-, y- and
 z-position of the point in a three-dimensional cartesian coordinate system. If
@@ -43,7 +45,7 @@ same as all other software developed at the University of Osnabrück.
 .SH USAGE
 .TP
 .B Mouse\-Drag left
-Rotate pointcloud.
+Rotate point cloud.
 .TP
 .B Mouse\-Drag right
 Move up/down, left/right.
@@ -54,7 +56,7 @@ Move forward
 .B Scroll\-Down
 Move backward
 .SH NORMAL MODE
-This mode is the main mode for viewing pointclouds. If you do not intend to
+This mode is the main mode for viewing point clouds. If you do not intend to
 modify any clouds or generate .pose files for them, you should always stay in
 this mode. After starting the ptsviewer you are automatically in this mode.
 .TP
@@ -89,13 +91,13 @@ Move up/down (slow).
 Jump to start position.
 .TP
 .B f
-Flip pointcloud.
+Flip point cloud.
 .TP
 .B x,y
 Invert x/y rotation.
 .TP
 .B 0...9
-Toggle visibility of pointclouds 0 to 9.
+Toggle visibility of point clouds 0 to 9.
 .TP
 .B *
  Increase movement speed.
@@ -104,10 +106,10 @@ Toggle visibility of pointclouds 0 to 9.
  Decrease movement speed.
 .TP
 .B u
-Unselect all clouds.
+Deselect all clouds.
 .TP
 .B t
-Toggle visibility of all pointclouds.
+Toggle visibility of all point clouds.
 .TP
 .B c
 Invert background color.
@@ -121,8 +123,8 @@ Enter move mode.
 .B Escape
 Quit program.
 .SH SELECTION MODE
-This mode is for selecting pointclouds. You can enter either the index number
-of one pointcloud to select or a list of indices separated by comma.
+This mode is for selecting point clouds. You can enter either the index number
+of one point cloud to select or a list of indices separated by comma.
 .TP
 .B 0...9
 Enter cloud number.
@@ -136,7 +138,7 @@ Apply selection.
 .B Escape
 Cancel selection.
 .SH MOVE MODE
-This mode is for modifying the pose of pointclouds. You can move them around,
+This mode is for modifying the pose of point clouds. You can move them around,
 rotate them and store/load these pose rearrangements as .pose file for use in
 the 3D-Toolkit (6dslam).
 .TP
@@ -192,7 +194,7 @@ Load pose files for selected clouds from cloud directory.
 Return to normal mode.
 .SH LICENSE
 This project is licensed under the terms of the Simplified BSD License. For
-more details have a look a the license file which comes along with this
+more details have a look at the license file which comes along with this
 software or can be found at
 https://github.com/lkiesow/ptsviewer/blob/master/license
 .SH SEE ALSO
@@ -200,7 +202,7 @@ https://github.com/lkiesow/ptsviewer/blob/master/license
 .B Project page on github.com:
 https://github.com/lkiesow/ptsviewer
 .TP
-.B 3D-Toolkit, including 6dslam for pointcloud registration:
+.B 3D-Toolkit, including 6dslam for point cloud registration:
 http://slam6d.sourceforge.net/
 .SH BUGS
 Please report them!
