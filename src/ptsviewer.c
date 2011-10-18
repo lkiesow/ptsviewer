@@ -531,6 +531,8 @@ void moveKeyPressed( unsigned char key ) {
 		case 'Z': FORSELC.rot.z -= 0.1; FSEND;
 		case 'H': FORSELC.rot.z += 0.1; FSEND;
 		/* Other stuff */
+		case '*': g_movespeed  *= 10;  break;
+		case '/': g_movespeed  /= 10;  break;
 		case ' ': FORSELC.enabled = !g_clouds[i].enabled; FSEND;
 		case 'p': FORALL printf( "%s: %f %f %f  %f %f %f\n", g_clouds[i].name,
 							 g_clouds[i].trans.x, g_clouds[i].trans.y,
