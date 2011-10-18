@@ -72,21 +72,42 @@ void loadPly( char * filename, size_t idx ) {
 
 	/* Check if there are vertices and get the amount of vertices. */
 	char buf[256] = "";
+	char elemname[256] = "point";
 	const char * name = buf;
 	long int nvertices = 0;
 	p_ply_element elem = NULL;
 	while ( ( elem = ply_get_next_element( ply, elem ) ) ) {
 		ply_get_element_info( elem, &name, &nvertices );
 		if ( !strcmp( name, "vertex" ) ) {
+			strcpy( elemname, "vertex" );
 			p_ply_property prop = NULL;
+			if ( g_clouds[ idx ].colors ) {
+				free( g_clouds[ idx ].colors );
+			}
 			while ( ( prop = ply_get_next_property( elem, prop ) ) ) {
 				ply_get_property_info( prop, &name, NULL, NULL, NULL );
 				if ( !strcmp( name, "red" ) ) {
 					/* We have color information */
 					g_clouds[ idx ].colors = ( uint8_t * ) 
-						malloc( nvertices * 3 * sizeof(uint8_t) );
+						realloc( g_clouds[ idx ].colors, nvertices * 3 * sizeof(uint8_t) );
 				}
 			}
+		} else if ( !strcmp( name, "point" ) ) {
+			strcpy( elemname, "point" );
+			p_ply_property prop = NULL;
+			if ( g_clouds[ idx ].colors ) {
+				free( g_clouds[ idx ].colors );
+			}
+			while ( ( prop = ply_get_next_property( elem, prop ) ) ) {
+				ply_get_property_info( prop, &name, NULL, NULL, NULL );
+				if ( !strcmp( name, "red" ) ) {
+					/* We have color information */
+					g_clouds[ idx ].colors = ( uint8_t * ) 
+						realloc( g_clouds[ idx ].colors, nvertices * 3 * sizeof(uint8_t) );
+				}
+			}
+			/* Point is more important than vertex. Thus we can stop immediately if
+			 * we got this element. */
 			break;
 		}
 	}
@@ -104,14 +125,14 @@ void loadPly( char * filename, size_t idx ) {
 	uint8_t * color  = g_clouds[ idx ].colors;
 
 	/* Set callbacks. */
-	ply_set_read_cb( ply, "vertex", "x",     plyVertexCb, &vertex, 0 );
-	ply_set_read_cb( ply, "vertex", "y",     plyVertexCb, &vertex, 0 );
-	ply_set_read_cb( ply, "vertex", "z",     plyVertexCb, &vertex, 1 );
+	nvertices = ply_set_read_cb( ply, elemname, "x",     plyVertexCb, &vertex, 0 );
+	ply_set_read_cb( ply, elemname, "y",     plyVertexCb, &vertex, 0 );
+	ply_set_read_cb( ply, elemname, "z",     plyVertexCb, &vertex, 1 );
 
 	if ( color ) {
-		ply_set_read_cb( ply, "vertex", "red",   plyColorCb,  &color,  0 );
-		ply_set_read_cb( ply, "vertex", "green", plyColorCb,  &color,  0 );
-		ply_set_read_cb( ply, "vertex", "blue",  plyColorCb,  &color,  1 );
+		ply_set_read_cb( ply, elemname, "red",   plyColorCb,  &color,  0 );
+		ply_set_read_cb( ply, elemname, "green", plyColorCb,  &color,  0 );
+		ply_set_read_cb( ply, elemname, "blue",  plyColorCb,  &color,  1 );
 	}
 
 	/* Read ply file. */
@@ -120,6 +141,8 @@ void loadPly( char * filename, size_t idx ) {
 		exit( EXIT_FAILURE );
 	}
 	ply_close( ply );
+
+	printf( "%ld values read.\nPoint cloud loaded.", nvertices );
 
 }
 
@@ -204,41 +227,13 @@ void loadPts( char * ptsfile, size_t idx ) {
 		}
 	}
 	g_clouds[ idx ].pointcount--;
-	printf( "  %u values read.\nPointcloud loaded.\n", g_clouds[ idx ].pointcount );
-
-	/* Fill color array if we did not get any color information from a file */
-	/*
-	if ( !g_clouds[ idx ].colors ) {
-		g_clouds[ idx ].colors = realloc( g_clouds[ idx ].colors, 
-				g_clouds[ idx ].pointcount * 3 * sizeof(uint8_t) );
-		uint8_t * c = g_clouds[ idx ].colors;
-		for ( ; c < g_clouds[ idx ].colors + ( g_clouds[ idx ].pointcount * 3 ); c++ ) {
-			*c = 255;
-		}
-	}
-	*/
+	printf( "  %u values read.\nPoint cloud loaded.\n", g_clouds[ idx ].pointcount );
 
 	if ( f ) {
 		fclose( f );
 	}
 
-	/* Normalize size of pointclouds. */
-	/*
-	unsigned int factor = 1;
-	while ( factor * 100 < maxval ) {
-		factor *= 10;
-	}
-	*/
 	g_maxdim = g_maxdim > maxval ? g_maxdim : maxval;
-	/*
-	if ( factor > 1 ) {
-		printf( "Maximum value is %u => scale factor is 1/%u.\n", maxval, factor );
-		printf( "Scaling points...\n" );
-		for ( i = 0; i < g_clouds[ idx ].pointcount * 3; i++ ) {
-			g_clouds[ idx ].vertices[i] /= factor;
-		}
-	}
-	*/
 
 }
 
@@ -348,7 +343,7 @@ void drawScene() {
 				glColorPointer(  3, GL_UNSIGNED_BYTE, 0, g_clouds[i].colors );
 			}
 		
-			/* Draw pointcloud */
+			/* Draw point cloud */
 			glDrawArrays( GL_POINTS, 0, g_clouds[i].pointcount );
 
 			/* Disable colorArray. */
@@ -680,7 +675,7 @@ void keyPressed( unsigned char key, int x, int y ) {
 						 g_clouds[i].enabled = !g_clouds[i].enabled;
 					 }
 	}
-	/* Control pointclouds */
+	/* Control point clouds */
 	if ( key >= '0' && key <= '9' ) {
 		if ( g_cloudcount > key - 0x30 ) {
 			g_clouds[ key - 0x30 ].enabled = !g_clouds[ key - 0x30 ].enabled;
@@ -812,7 +807,7 @@ int main( int argc, char ** argv ) {
 	/* Prepare array */
 	g_clouds = (cloud_t *) malloc( (argc - 1) * sizeof( cloud_t ) );
 	if ( !g_clouds ) {
-		fprintf( stderr, "Could not allocate memory for pointclouds!\n" );
+		fprintf( stderr, "Could not allocate memory for point clouds!\n" );
 		exit( EXIT_FAILURE );
 	}
 	g_cloudcount = argc - 1;
@@ -853,7 +848,7 @@ void printHelp() {
 
 	printf( "\n=== CONTROLS: ======\n"
 			"-- Mouse: ---\n"
-			" drag left   Rotate pointcloud\n"
+			" drag left   Rotate point cloud\n"
 			" drag right  Move up/down, left/right\n"
 			" wheel       Move forward, backward (fact)\n"
 			"-- Keyboard (normal mode): ---\n"
@@ -865,12 +860,12 @@ void printHelp() {
 /*			" W,S         Move forward, backward (slow)\n" */
 /*			" Q,E         Move up, down (slow)\n"          */
 			" j           Jump to start position\n"
-/*			" f           Flip pointcloud\n"               */
+/*			" f           Flip point cloud\n"               */
 /*			" y,x         Invert rotation\n"               */
 			" +,-         Zoom in, out\n"
 			" *,/         Increase/Decrease movement speed\n"
-			" 0...9       Toggle visibility of pointclouds 0 to 9\n"
-			" t           Toggle visibility of all pointclouds\n"
+			" 0...9       Toggle visibility of point clouds 0 to 9\n"
+			" t           Toggle visibility of all point clouds\n"
 			" u           Unselect all clouds\n"
 			" c           Invert background color\n"
 			" C           Toggle coordinate axis\n"
