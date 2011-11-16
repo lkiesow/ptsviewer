@@ -75,10 +75,12 @@ void loadPly( char * filename, size_t idx ) {
 	char elemname[256] = "point";
 	const char * name = buf;
 	long int nvertices = 0;
+	long int count = 0;
 	p_ply_element elem = NULL;
 	while ( ( elem = ply_get_next_element( ply, elem ) ) ) {
-		ply_get_element_info( elem, &name, &nvertices );
+		ply_get_element_info( elem, &name, &count );
 		if ( !strcmp( name, "vertex" ) ) {
+			nvertices = count;
 			strcpy( elemname, "vertex" );
 			p_ply_property prop = NULL;
 			if ( g_clouds[ idx ].colors ) {
@@ -93,6 +95,7 @@ void loadPly( char * filename, size_t idx ) {
 				}
 			}
 		} else if ( !strcmp( name, "point" ) ) {
+			nvertices = count;
 			strcpy( elemname, "point" );
 			p_ply_property prop = NULL;
 			if ( g_clouds[ idx ].colors ) {

@@ -9,10 +9,29 @@ $(OBJDIR)/ptsviewer.o: $(SRCDIR)/ptsviewer.c $(SRCDIR)/ptsviewer.h
 	@mkdir -p $(OBJDIR)
 	$(COMPILER) $(FLAGS) -c $(SRCDIR)/ptsviewer.c -o $(OBJDIR)/ptsviewer.o
 
-test: all
+
+# DEBUG
+debug: $(OBJDIR)/ptsviewer.dbg.o
+	$(COMPILER) $(OBJDIR)/*.o -o ptsviewer  $(DFLAGS)
+
+$(OBJDIR)/ptsviewer.dbg.o: $(SRCDIR)/ptsviewer.c $(SRCDIR)/ptsviewer.h
+	@mkdir -p $(OBJDIR)
+	$(COMPILER) $(DFLAGS) -c $(SRCDIR)/ptsviewer.c -o $(OBJDIR)/ptsviewer.dbg.o
+
+
+# RELEASE
+release: $(OBJDIR)/ptsviewer.rel.o
+	$(COMPILER) $(OBJDIR)/*.o -o ptsviewer  $(RFLAGS)
+
+$(OBJDIR)/ptsviewer.rel.o: $(SRCDIR)/ptsviewer.c $(SRCDIR)/ptsviewer.h
+	@mkdir -p $(OBJDIR)
+	$(COMPILER) $(RFLAGS) -c $(SRCDIR)/ptsviewer.c -o $(OBJDIR)/ptsviewer.rel.o
+
+
+test: it
 	./ptsviewer
 
-install: it
+install: release
 	@echo installing executable file to ${DESTDIR}${PREFIX}/bin
 	@mkdir -p ${DESTDIR}${PREFIX}/bin
 	@cp -f ptsviewer ${DESTDIR}${PREFIX}/bin

@@ -1,5 +1,5 @@
 # ptsviewer version
-VERSION = 0.7
+VERSION = 0.7.1
 
 # Customize below to fit your system
 
@@ -26,3 +26,5 @@ SRCDIR   = src
 # compiler and additional flags
 COMPILER = gcc
 FLAGS    = -Wall -DVERSION=\"${VERSION}\" ${INCS} ${LIBS}
+RFLAGS   = ${FLAGS} -O3
+DFLAGS   = ${FLAGS} -g
