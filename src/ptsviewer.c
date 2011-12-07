@@ -15,22 +15,33 @@
 #include "ptsviewer.h"
 
 
+#define min(A,B) ((A)<(B) ? (A) : (B)) 
+#define max(A,B) ((A)>(B) ? (A) : (B)) 
+
+
 /*******************************************************************************
  *         Name:  ply_vertex_cb
  *  Description:  
  ******************************************************************************/
 int plyVertexCb( p_ply_argument argument ) {
 
-	float ** vertex;
-	long int eol = 0;
-	ply_get_argument_user_data( argument, (void *) &vertex, &eol );
-	if ( eol ) {
-		**vertex = -ply_get_argument_value( argument );
-	} else {
-		**vertex =  ply_get_argument_value( argument );
+	struct { float* v; boundingbox_t* b; } * d;
+	long int eol;
+	ply_get_argument_user_data( argument, (void *) &d, &eol );
+	if ( eol == 0 ) {
+		*(d->v) = ply_get_argument_value( argument );
+		if ( *(d->v) > d->b->max.x ) { d->b->max.x = *(d->v); }
+		if ( *(d->v) < d->b->min.x ) { d->b->min.x = *(d->v); }
+	} else if ( eol == 1 ) {
+		*(d->v) = ply_get_argument_value( argument );
+		if ( *(d->v) > d->b->max.y ) { d->b->max.y = *(d->v); }
+		if ( *(d->v) < d->b->min.y ) { d->b->min.y = *(d->v); }
+	} else if ( eol == 2 ) {
+		*(d->v) = -ply_get_argument_value( argument );
+		if ( *(d->v) > d->b->max.z ) { d->b->max.z = *(d->v); }
+		if ( *(d->v) < d->b->min.z ) { d->b->min.z = *(d->v); }
 	}
-	g_maxdim = g_maxdim > fabs( **vertex ) ? g_maxdim : fabs( **vertex );
-	(*vertex)++;
+	d->v++;
 	return 1;
 
 }
@@ -122,20 +133,27 @@ void loadPly( char * filename, size_t idx ) {
 	/* Allocate memory. */
 	g_clouds[ idx ].pointcount = nvertices;
 	nvertices++;
-	g_clouds[ idx ].vertices   = ( float * ) malloc( nvertices * 3 * sizeof(float) );
+	g_clouds[ idx ].vertices = (float*) malloc( nvertices * 3 * sizeof(float) );
 	
-	float * vertex = g_clouds[ idx ].vertices;
-	uint8_t * color  = g_clouds[ idx ].colors;
+	uint8_t* color  = g_clouds[ idx ].colors;
+	g_clouds[ idx ].boundingbox.min.x = DBL_MAX;
+	g_clouds[ idx ].boundingbox.min.y = DBL_MAX;
+	g_clouds[ idx ].boundingbox.min.z = DBL_MAX;
+	g_clouds[ idx ].boundingbox.max.x = DBL_MIN;
+	g_clouds[ idx ].boundingbox.max.y = DBL_MIN;
+	g_clouds[ idx ].boundingbox.max.z = DBL_MIN;
+	struct { float* v; boundingbox_t* b; } d = { 
+		g_clouds[ idx ].vertices, &g_clouds[ idx ].boundingbox };
 
 	/* Set callbacks. */
-	nvertices = ply_set_read_cb( ply, elemname, "x",     plyVertexCb, &vertex, 0 );
-	ply_set_read_cb( ply, elemname, "y",     plyVertexCb, &vertex, 0 );
-	ply_set_read_cb( ply, elemname, "z",     plyVertexCb, &vertex, 1 );
+	nvertices = ply_set_read_cb( ply, elemname, "x", plyVertexCb, &d, 0 );
+	            ply_set_read_cb( ply, elemname, "y", plyVertexCb, &d, 1 );
+	            ply_set_read_cb( ply, elemname, "z", plyVertexCb, &d, 2 );
 
 	if ( color ) {
-		ply_set_read_cb( ply, elemname, "red",   plyColorCb,  &color,  0 );
-		ply_set_read_cb( ply, elemname, "green", plyColorCb,  &color,  0 );
-		ply_set_read_cb( ply, elemname, "blue",  plyColorCb,  &color,  1 );
+		ply_set_read_cb( ply, elemname, "red",   plyColorCb, &color, 0 );
+		ply_set_read_cb( ply, elemname, "green", plyColorCb, &color, 1 );
+		ply_set_read_cb( ply, elemname, "blue",  plyColorCb, &color, 2 );
 	}
 
 	/* Read ply file. */
@@ -146,6 +164,15 @@ void loadPly( char * filename, size_t idx ) {
 	ply_close( ply );
 
 	printf( "%ld values read.\nPoint cloud loaded.", nvertices );
+
+	g_maxdim = max( max( max( g_maxdim, d.b->max.x - d.b->min.x ), 
+				d.b->max.y - d.b->min.y ), d.b->max.z - d.b->min.z ); 
+	g_bb.max.x = max( g_bb.max.x, d.b->max.x );
+	g_bb.max.y = max( g_bb.max.y, d.b->max.y );
+	g_bb.max.z = max( g_bb.max.z, d.b->max.z );
+	g_bb.min.x = min( g_bb.min.x, d.b->min.x );
+	g_bb.min.y = min( g_bb.min.y, d.b->min.y );
+	g_bb.min.z = min( g_bb.min.z, d.b->min.z );
 
 }
 
@@ -194,13 +221,18 @@ void loadPts( char * ptsfile, size_t idx ) {
 	/* Start from the beginning */
 	fseek( f, 0, SEEK_SET );
 
-	float maxval = 0.0f;
+	boundingbox_t bb = { 
+		{ DBL_MAX, DBL_MAX, DBL_MAX }, 
+		{ DBL_MIN, DBL_MIN, DBL_MIN } };
 	while ( !feof( f ) ) {
 		fscanf( f, "%f %f %f", vert_pos, vert_pos+1, vert_pos+2 );
 		vert_pos[2] *= -1; /* z */
-		if ( fabs( vert_pos[0] ) > maxval ) { maxval = fabs( vert_pos[0] ); }
-		if ( fabs( vert_pos[1] ) > maxval ) { maxval = fabs( vert_pos[1] ); }
-		if ( fabs( vert_pos[2] ) > maxval ) { maxval = fabs( vert_pos[2] ); }
+		if ( vert_pos[0] > bb.max.x ) { bb.max.x = vert_pos[0]; }
+		if ( vert_pos[1] > bb.max.y ) { bb.max.y = vert_pos[1]; }
+		if ( vert_pos[2] > bb.max.z ) { bb.max.z = vert_pos[2]; }
+		if ( vert_pos[0] < bb.min.x ) { bb.min.x = vert_pos[0]; }
+		if ( vert_pos[1] < bb.min.y ) { bb.min.y = vert_pos[1]; }
+		if ( vert_pos[2] < bb.min.z ) { bb.min.z = vert_pos[2]; }
 		vert_pos += 3;
 		for ( i = 0; i < dummy_count; i++ ) {
 			fscanf( f, "%f", &dummy );
@@ -230,13 +262,22 @@ void loadPts( char * ptsfile, size_t idx ) {
 		}
 	}
 	g_clouds[ idx ].pointcount--;
-	printf( "  %u values read.\nPoint cloud loaded.\n", g_clouds[ idx ].pointcount );
+	g_clouds[ idx ].boundingbox = bb;
+	printf( "  %u values read.\nPoint cloud loaded.\n", 
+			g_clouds[ idx ].pointcount );
 
 	if ( f ) {
 		fclose( f );
 	}
 
-	g_maxdim = g_maxdim > maxval ? g_maxdim : maxval;
+	g_maxdim = max( max( max( g_maxdim, bb.max.x - bb.min.x ), 
+				bb.max.y - bb.min.y ), bb.max.z - bb.min.z ); 
+	g_bb.max.x = max( g_bb.max.x, bb.max.x );
+	g_bb.max.y = max( g_bb.max.y, bb.max.y );
+	g_bb.max.z = max( g_bb.max.z, bb.max.z );
+	g_bb.min.x = min( g_bb.min.x, bb.min.x );
+	g_bb.min.y = min( g_bb.min.y, bb.min.y );
+	g_bb.min.z = min( g_bb.min.z, bb.min.z );
 
 }
 
@@ -331,6 +372,8 @@ void drawScene() {
 
 			glRotatef( (int) g_rot.tilt, 1, 0, 0 );
 			glRotatef( (int) g_rot.pan, 0, 1, 0 );
+
+			glTranslatef( -g_trans_center.x, -g_trans_center.y, -g_trans_center.z );
 
 			/* local (this cloud only) */
 			glTranslatef( g_clouds[i].trans.x, g_clouds[i].trans.y,
@@ -833,7 +876,13 @@ int main( int argc, char ** argv ) {
 		g_clouds[i].enabled = 1;
 	}
 
-	/* Print usage information to stdout */
+	/* Calculate translation to middle of cloud. */
+	g_trans_center.x = ( g_bb.max.x + g_bb.min.x ) / 2;
+	g_trans_center.y = ( g_bb.max.y + g_bb.min.y ) / 2;
+	g_trans_center.z = ( g_bb.max.z + g_bb.min.z ) / 2;
+	g_translate.z = -fabs( g_bb.max.z - g_bb.min.z );
+
+	/* Print usage information to stdout. */
 	printHelp();
 
 	/* Run program */

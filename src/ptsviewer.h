@@ -24,6 +24,7 @@
 #include <libgen.h>
 #include <math.h>
 #include <rply.h>
+#include <float.h>
 
 #define FILE_FORMAT_NONE 0
 #define FILE_FORMAT_UOS  1
@@ -49,14 +50,20 @@ typedef struct {
 } coord3d_t;
 
 typedef struct {
-	float *    vertices;
-	uint8_t *  colors;
-	uint32_t   pointcount;
-	int        enabled;
-	coord3d_t  trans;
-	coord3d_t  rot;
-	int        selected;
-	char *     name;
+	coord3d_t min;
+	coord3d_t max;
+} boundingbox_t;
+
+typedef struct {
+	float *       vertices;
+	uint8_t *     colors;
+	uint32_t      pointcount;
+	int           enabled;
+	coord3d_t     trans;
+	coord3d_t     rot;
+	int           selected;
+	char *        name;
+	boundingbox_t boundingbox;
 } cloud_t;
 
 typedef struct {
@@ -81,10 +88,15 @@ float     g_pointsize       =               1.0f;
 cloud_t * g_clouds          =               NULL;
 uint32_t  g_cloudcount      =                  0;
 float     g_maxdim          =                  0;
+coord3d_t g_trans_center    =  { 0.0, 0.0, 0.0 };
 int       g_showcoord       =                  0;
 char      g_selection[1024] =                 "";
 float     g_movespeed       =                  1;
 int       g_left            =                -75;
+
+boundingbox_t g_bb = { 
+	{ DBL_MAX, DBL_MAX, DBL_MAX }, 
+	{ DBL_MIN, DBL_MIN, DBL_MIN } };
 
 /* Define viewer modes */
 
