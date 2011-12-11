@@ -93,6 +93,7 @@ int       g_showcoord       =                  0;
 char      g_selection[1024] =                 "";
 float     g_movespeed       =                  1;
 int       g_left            =                -75;
+int       g_datastep        =                  0;
 
 boundingbox_t g_bb = { 
 	{ DBL_MAX, DBL_MAX, DBL_MAX }, 

@@ -384,13 +384,13 @@ void drawScene() {
 			glRotatef( (int) g_clouds[i].rot.z, 0, 0, 1 );
 
 			/* Set vertex and color pointer. */
-			glVertexPointer( 3, GL_FLOAT, 0, g_clouds[i].vertices );
+			glVertexPointer( 3, GL_FLOAT, g_datastep * 3 * sizeof(float), g_clouds[i].vertices );
 			if ( g_clouds[i].colors ) {
-				glColorPointer(  3, GL_UNSIGNED_BYTE, 0, g_clouds[i].colors );
+				glColorPointer( 3, GL_UNSIGNED_BYTE, g_datastep * 3 * sizeof(uint8_t), g_clouds[i].colors );
 			}
 		
 			/* Draw point cloud */
-			glDrawArrays( GL_POINTS, 0, g_clouds[i].pointcount );
+			glDrawArrays( GL_POINTS, 0, g_clouds[i].pointcount / ( g_datastep + 1 ) );
 
 			/* Disable colorArray. */
 			if ( g_clouds[i].colors ) {
@@ -678,6 +678,8 @@ void keyPressed( unsigned char key, int x, int y ) {
 			break;
 		case '+': g_zoom      *= 1.1; break;
 		case '-': g_zoom      /= 1.1; break;
+		case '[': g_datastep   = ( g_datastep > 9 ) ? g_datastep - 10 : 0; break;
+		case ']': g_datastep  += 10; break;
 		/* movement */
 		case 'a': g_translate.x += 1 * g_movespeed; break;
 		case 'd': g_translate.x -= 1 * g_movespeed; break;
@@ -713,12 +715,12 @@ void keyPressed( unsigned char key, int x, int y ) {
 						glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
 					}
 				 break;
-	case 'u':
+		case 'u':
 					 for ( i = 0; i < g_cloudcount; i++ ) {
 						 g_clouds[i].selected = 0;
 					 }
 					 break;
-	case 't':
+		case 't':
 					 for ( i = 0; i < g_cloudcount; i++ ) {
 						 g_clouds[i].enabled = !g_clouds[i].enabled;
 					 }
