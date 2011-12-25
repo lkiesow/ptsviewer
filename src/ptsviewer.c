@@ -176,6 +176,28 @@ void loadPly( char * filename, size_t idx ) {
 
 }
 
+
+/*******************************************************************************
+ *         Name:  countValuesPerLine
+ *  Description:  Count the values in the current line of the given file.
+ ******************************************************************************/
+int countValuesPerLine( FILE * f ) {
+
+	char line[1024];
+	fgets( line, 1023, f );
+	int valcount = 0;
+	char * pch = strtok( line, "\t " );
+	while ( pch ) {
+		if ( strcmp( pch, "" ) && strcmp( pch, "\n" ) ) {
+			valcount++;
+		}
+		pch = strtok( NULL, "\t " );
+	}
+	return valcount;
+
+}
+
+
 /*******************************************************************************
  *         Name:  load_pts
  *  Description:  Load a pts file into memory.
@@ -192,16 +214,8 @@ void loadPts( char * ptsfile, size_t idx ) {
 	}
 
 	/* Determine amount of values per line */
-	char line[1024];
-	fgets( line, 1023, f );
-	int valcount = 0;
-	char * pch = strtok( line, "\t " );
-	while ( pch ) {
-		if ( strcmp( pch, "" ) && strcmp( pch, "\n" ) ) {
-			valcount++;
-		}
-		pch = strtok( NULL, "\t " );
-	}
+	int valcount_first_line = countValuesPerLine( f );
+	int valcount = countValuesPerLine( f );
 
 	/* Do we have color information in the pts file? */
 	int read_color = valcount >= 6;
@@ -220,6 +234,13 @@ void loadPts( char * ptsfile, size_t idx ) {
 
 	/* Start from the beginning */
 	fseek( f, 0, SEEK_SET );
+
+	/* If amount of values in first line is different of the second line jump
+	 * over the first line. */
+	if ( valcount != valcount_first_line ) {
+		char line[1024];
+		fgets( line, 1023, f );
+	}
 
 	boundingbox_t bb = { 
 		{ DBL_MAX, DBL_MAX, DBL_MAX }, 
