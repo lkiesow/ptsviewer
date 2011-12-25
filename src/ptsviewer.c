@@ -311,8 +311,14 @@ void mouseMoved( int x, int y ) {
 
 	if ( g_last_mousebtn == GLUT_LEFT_BUTTON ) {
 		if ( g_mx >= 0 && g_my >= 0 ) {
-			g_rot.tilt += ( y - g_my ) * g_invertroty / 4.0f;
-			g_rot.pan  += ( x - g_mx ) * g_invertrotx / 4.0f;
+			g_rot.x += ( y - g_my ) * g_invertroty / 4.0f;
+			g_rot.y += ( x - g_mx ) * g_invertrotx / 4.0f;
+			glutPostRedisplay();
+		}
+	} else if ( g_last_mousebtn == GLUT_MIDDLE_BUTTON ) {
+		if ( g_mx >= 0 && g_my >= 0 ) {
+			g_rot.x += ( y - g_my ) * g_invertroty / 4.0f;
+			g_rot.z += ( x - g_mx ) * g_invertrotx / 4.0f;
 			glutPostRedisplay();
 		}
 	} else if ( g_last_mousebtn == GLUT_RIGHT_BUTTON ) {
@@ -332,10 +338,13 @@ void mouseMoved( int x, int y ) {
  ******************************************************************************/
 void mousePress( int button, int state, int x, int y ) {
 
+	printf( "btn: %d\n", button );
+
 	if ( state == GLUT_DOWN ) {
 		switch ( button ) {
 			case GLUT_LEFT_BUTTON:
 			case GLUT_RIGHT_BUTTON:
+			case GLUT_MIDDLE_BUTTON:
 				g_last_mousebtn = button;
 				g_mx = x;
 				g_my = y;
@@ -391,8 +400,9 @@ void drawScene() {
 			glScalef( g_zoom, g_zoom, 1 );
 			glTranslatef( g_translate.x, g_translate.y, g_translate.z );
 
-			glRotatef( (int) g_rot.tilt, 1, 0, 0 );
-			glRotatef( (int) g_rot.pan, 0, 1, 0 );
+			glRotatef( (int) g_rot.x, 1, 0, 0 );
+			glRotatef( (int) g_rot.y, 0, 1, 0 );
+			glRotatef( (int) g_rot.z, 0, 0, 1 );
 
 			glTranslatef( -g_trans_center.x, -g_trans_center.y, -g_trans_center.z );
 
@@ -486,8 +496,9 @@ void drawScene() {
 		glColor4f( 0.0, 1.0, 0.0, 0.0 );
 		glScalef( g_zoom, g_zoom, 1 );
 		glTranslatef( g_translate.x, g_translate.y, g_translate.z );
-		glRotatef( (int) g_rot.tilt, 1, 0, 0 );
-		glRotatef( (int) g_rot.pan,  0, 1, 0 );
+		glRotatef( (int) g_rot.x, 1, 0, 0 );
+		glRotatef( (int) g_rot.y, 0, 1, 0 );
+		glRotatef( (int) g_rot.z, 0, 0, 1 );
 
 		glRasterPos3f( g_maxdim,       0.0f,     0.0f );
 		glutBitmapCharacter( GLUT_BITMAP_8_BY_13, 'X' );
@@ -693,8 +704,9 @@ void keyPressed( unsigned char key, int x, int y ) {
 			g_translate.x = 0;
 			g_translate.y = 0;
 			g_translate.z = 0;
-			g_rot.pan     = 0;
-			g_rot.tilt    = 0;
+			g_rot.x       = 0;
+			g_rot.y       = 0;
+			g_rot.z       = 0;
 			g_zoom        = 1;
 			break;
 		case '+': g_zoom      *= 1.1; break;
@@ -724,7 +736,7 @@ void keyPressed( unsigned char key, int x, int y ) {
 		case '/': g_movespeed  /= 10;  break;
 		case 'x': g_invertrotx *= -1;  break;
 		case 'y': g_invertroty *= -1;  break;
-		case 'f': g_rot.tilt   += 180; break;
+		case 'f': g_rot.y      += 180; break;
 		case 'C': g_showcoord = !g_showcoord; break;
 		case 'c': glGetFloatv( GL_COLOR_CLEAR_VALUE, rgb );
 					/* Invert background color */
@@ -923,7 +935,8 @@ void printHelp() {
 
 	printf( "\n=== CONTROLS: ======\n"
 			"-- Mouse: ---\n"
-			" drag left   Rotate point cloud\n"
+			" drag left   Rotate point cloud (x/y axis)\n"
+			" drag middle Rotate point cloud (x/z axis)\n"
 			" drag right  Move up/down, left/right\n"
 			" wheel       Move forward, backward (fact)\n"
 			"-- Keyboard (normal mode): ---\n"

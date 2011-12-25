@@ -66,16 +66,11 @@ typedef struct {
 	boundingbox_t boundingbox;
 } cloud_t;
 
-typedef struct {
-	float pan;
-	float tilt;
-} pantilt_t;
-
 
 
 /* Global variables */
 coord3d_t g_translate       =  { 0.0, 0.0, 0.0 };
-pantilt_t g_rot             =     { 0.0f, 0.0f };
+coord3d_t g_rot             =  { 0.0, 0.0, 0.0 };
 int       g_window          =                  0;
 int       g_mx              =                 -1;
 int       g_my              =                 -1;
