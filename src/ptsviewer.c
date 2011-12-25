@@ -338,8 +338,6 @@ void mouseMoved( int x, int y ) {
  ******************************************************************************/
 void mousePress( int button, int state, int x, int y ) {
 
-	printf( "btn: %d\n", button );
-
 	if ( state == GLUT_DOWN ) {
 		switch ( button ) {
 			case GLUT_LEFT_BUTTON:
@@ -499,21 +497,22 @@ void drawScene() {
 		glRotatef( (int) g_rot.x, 1, 0, 0 );
 		glRotatef( (int) g_rot.y, 0, 1, 0 );
 		glRotatef( (int) g_rot.z, 0, 0, 1 );
+		glTranslatef( -g_trans_center.x, -g_trans_center.y, -g_trans_center.z );
 
-		glRasterPos3f( g_maxdim,       0.0f,     0.0f );
+		glRasterPos3f( g_bb.max.x,       0.0f,     0.0f );
 		glutBitmapCharacter( GLUT_BITMAP_8_BY_13, 'X' );
-		glRasterPos3f(     0.0f,   g_maxdim,     0.0f );
+		glRasterPos3f(     0.0f,   g_bb.max.y,     0.0f );
 		glutBitmapCharacter( GLUT_BITMAP_8_BY_13, 'Y' );
-		glRasterPos3f(     0.0f,       0.0f, - (float) g_maxdim );
+		glRasterPos3f(     0.0f,       0.0f, g_bb.min.z );
 		glutBitmapCharacter( GLUT_BITMAP_8_BY_13, 'Z' );
 
 		glBegin( GL_LINES );
-		glVertex3i(        0,        0,         0 );
-		glVertex3i( g_maxdim,        0,         0 );
-		glVertex3i(        0,        0,         0 );
-		glVertex3i(        0, g_maxdim,         0 );
-		glVertex3i(        0,        0,         0 );
-		glVertex3i(        0,        0, -g_maxdim );
+		glVertex3i(          0,          0,           0 );
+		glVertex3i( g_bb.max.x,          0,           0 );
+		glVertex3i(           0,          0,          0 );
+		glVertex3i(           0, g_bb.max.y,          0 );
+		glVertex3i(           0,          0,          0 );
+		glVertex3i(           0,          0, g_bb.min.z );
 		glEnd();
 	}
 
