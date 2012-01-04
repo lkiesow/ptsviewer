@@ -176,6 +176,28 @@ void loadPly( char * filename, size_t idx ) {
 
 }
 
+
+/*******************************************************************************
+ *         Name:  countValuesPerLine
+ *  Description:  Count the values in the current line of the given file.
+ ******************************************************************************/
+int countValuesPerLine( FILE * f ) {
+
+	char line[1024];
+	fgets( line, 1023, f );
+	int valcount = 0;
+	char * pch = strtok( line, "\t " );
+	while ( pch ) {
+		if ( strcmp( pch, "" ) && strcmp( pch, "\n" ) ) {
+			valcount++;
+		}
+		pch = strtok( NULL, "\t " );
+	}
+	return valcount;
+
+}
+
+
 /*******************************************************************************
  *         Name:  load_pts
  *  Description:  Load a pts file into memory.
@@ -192,16 +214,8 @@ void loadPts( char * ptsfile, size_t idx ) {
 	}
 
 	/* Determine amount of values per line */
-	char line[1024];
-	fgets( line, 1023, f );
-	int valcount = 0;
-	char * pch = strtok( line, "\t " );
-	while ( pch ) {
-		if ( strcmp( pch, "" ) && strcmp( pch, "\n" ) ) {
-			valcount++;
-		}
-		pch = strtok( NULL, "\t " );
-	}
+	int valcount_first_line = countValuesPerLine( f );
+	int valcount = countValuesPerLine( f );
 
 	/* Do we have color information in the pts file? */
 	int read_color = valcount >= 6;
@@ -220,6 +234,16 @@ void loadPts( char * ptsfile, size_t idx ) {
 
 	/* Start from the beginning */
 	fseek( f, 0, SEEK_SET );
+
+	/* If amount of values in first line is different of the second line jump
+	 * over the first line. */
+	/* Also if the line starts with # jump over it */
+	if ( ( valcount != valcount_first_line ) || ( fgetc( f ) == '#' ) ) {
+		char line[1024];
+		fgets( line, 1023, f );
+	} else {
+		fseek( f, 0, SEEK_SET );
+	}
 
 	boundingbox_t bb = { 
 		{ DBL_MAX, DBL_MAX, DBL_MAX }, 
@@ -290,8 +314,14 @@ void mouseMoved( int x, int y ) {
 
 	if ( g_last_mousebtn == GLUT_LEFT_BUTTON ) {
 		if ( g_mx >= 0 && g_my >= 0 ) {
-			g_rot.tilt += ( y - g_my ) * g_invertroty / 4.0f;
-			g_rot.pan  += ( x - g_mx ) * g_invertrotx / 4.0f;
+			g_rot.x += ( y - g_my ) * g_invertroty / 4.0f;
+			g_rot.y += ( x - g_mx ) * g_invertrotx / 4.0f;
+			glutPostRedisplay();
+		}
+	} else if ( g_last_mousebtn == GLUT_MIDDLE_BUTTON ) {
+		if ( g_mx >= 0 && g_my >= 0 ) {
+			g_rot.x += ( y - g_my ) * g_invertroty / 4.0f;
+			g_rot.z += ( x - g_mx ) * g_invertrotx / 4.0f;
 			glutPostRedisplay();
 		}
 	} else if ( g_last_mousebtn == GLUT_RIGHT_BUTTON ) {
@@ -315,6 +345,7 @@ void mousePress( int button, int state, int x, int y ) {
 		switch ( button ) {
 			case GLUT_LEFT_BUTTON:
 			case GLUT_RIGHT_BUTTON:
+			case GLUT_MIDDLE_BUTTON:
 				g_last_mousebtn = button;
 				g_mx = x;
 				g_my = y;
@@ -370,8 +401,9 @@ void drawScene() {
 			glScalef( g_zoom, g_zoom, 1 );
 			glTranslatef( g_translate.x, g_translate.y, g_translate.z );
 
-			glRotatef( (int) g_rot.tilt, 1, 0, 0 );
-			glRotatef( (int) g_rot.pan, 0, 1, 0 );
+			glRotatef( (int) g_rot.x, 1, 0, 0 );
+			glRotatef( (int) g_rot.y, 0, 1, 0 );
+			glRotatef( (int) g_rot.z, 0, 0, 1 );
 
 			glTranslatef( -g_trans_center.x, -g_trans_center.y, -g_trans_center.z );
 
@@ -465,23 +497,25 @@ void drawScene() {
 		glColor4f( 0.0, 1.0, 0.0, 0.0 );
 		glScalef( g_zoom, g_zoom, 1 );
 		glTranslatef( g_translate.x, g_translate.y, g_translate.z );
-		glRotatef( (int) g_rot.tilt, 1, 0, 0 );
-		glRotatef( (int) g_rot.pan,  0, 1, 0 );
+		glRotatef( (int) g_rot.x, 1, 0, 0 );
+		glRotatef( (int) g_rot.y, 0, 1, 0 );
+		glRotatef( (int) g_rot.z, 0, 0, 1 );
+		glTranslatef( -g_trans_center.x, -g_trans_center.y, -g_trans_center.z );
 
-		glRasterPos3f( g_maxdim,       0.0f,     0.0f );
+		glRasterPos3f( g_bb.max.x,       0.0f,     0.0f );
 		glutBitmapCharacter( GLUT_BITMAP_8_BY_13, 'X' );
-		glRasterPos3f(     0.0f,   g_maxdim,     0.0f );
+		glRasterPos3f(     0.0f,   g_bb.max.y,     0.0f );
 		glutBitmapCharacter( GLUT_BITMAP_8_BY_13, 'Y' );
-		glRasterPos3f(     0.0f,       0.0f, - (float) g_maxdim );
+		glRasterPos3f(     0.0f,       0.0f, g_bb.min.z );
 		glutBitmapCharacter( GLUT_BITMAP_8_BY_13, 'Z' );
 
 		glBegin( GL_LINES );
-		glVertex3i(        0,        0,         0 );
-		glVertex3i( g_maxdim,        0,         0 );
-		glVertex3i(        0,        0,         0 );
-		glVertex3i(        0, g_maxdim,         0 );
-		glVertex3i(        0,        0,         0 );
-		glVertex3i(        0,        0, -g_maxdim );
+		glVertex3i(          0,          0,           0 );
+		glVertex3i( g_bb.max.x,          0,           0 );
+		glVertex3i(           0,          0,          0 );
+		glVertex3i(           0, g_bb.max.y,          0 );
+		glVertex3i(           0,          0,          0 );
+		glVertex3i(           0,          0, g_bb.min.z );
 		glEnd();
 	}
 
@@ -672,8 +706,9 @@ void keyPressed( unsigned char key, int x, int y ) {
 			g_translate.x = 0;
 			g_translate.y = 0;
 			g_translate.z = 0;
-			g_rot.pan     = 0;
-			g_rot.tilt    = 0;
+			g_rot.x       = 0;
+			g_rot.y       = 0;
+			g_rot.z       = 0;
 			g_zoom        = 1;
 			break;
 		case '+': g_zoom      *= 1.1; break;
@@ -705,7 +740,7 @@ void keyPressed( unsigned char key, int x, int y ) {
 		case '/': g_movespeed  /= 10;  break;
 		case 'x': g_invertrotx *= -1;  break;
 		case 'y': g_invertroty *= -1;  break;
-		case 'f': g_rot.tilt   += 180; break;
+		case 'f': g_rot.y      += 180; break;
 		case 'C': g_showcoord = !g_showcoord; break;
 		case 'c': glGetFloatv( GL_COLOR_CLEAR_VALUE, rgb );
 					/* Invert background color */
@@ -904,7 +939,8 @@ void printHelp() {
 
 	printf( "\n=== CONTROLS: ======\n"
 			"-- Mouse: ---\n"
-			" drag left   Rotate point cloud\n"
+			" drag left   Rotate point cloud (x/y axis)\n"
+			" drag middle Rotate point cloud (x/z axis)\n"
 			" drag right  Move up/down, left/right\n"
 			" wheel       Move forward, backward (fact)\n"
 			"-- Keyboard (normal mode): ---\n"
