@@ -237,9 +237,12 @@ void loadPts( char * ptsfile, size_t idx ) {
 
 	/* If amount of values in first line is different of the second line jump
 	 * over the first line. */
-	if ( valcount != valcount_first_line ) {
+	/* Also if the line starts with # jump over it */
+	if ( ( valcount != valcount_first_line ) || ( fgetc( f ) == '#' ) ) {
 		char line[1024];
 		fgets( line, 1023, f );
+	} else {
+		fseek( f, 0, SEEK_SET );
 	}
 
 	boundingbox_t bb = { 
