@@ -1,5 +1,5 @@
 # ptsviewer version
-VERSION = 0.7.4
+VERSION = 0.7.5
 
 # Customize below to fit your system
 
@@ -17,7 +17,7 @@ MLIB   =-lm
 
 # includes and libs
 INCS=-I. -I/usr/X11/include/ ${GLINC} ${GLUINC} ${GLUTINC}
-LIBS=-L/usr/lib ${GLLIB} ${GLULIB} ${GLUTLIB} ${MLIB} -lrply
+LIBS=-L/usr/lib ${GLLIB} ${GLULIB} ${GLUTLIB} ${MLIB}
 
 # dirs for source and object files
 OBJDIR   = obj

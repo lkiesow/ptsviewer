@@ -23,7 +23,7 @@
 #include <stdlib.h>
 #include <libgen.h>
 #include <math.h>
-#include <rply.h>
+#include "rply/rply.h"
 #include <float.h>
 
 #define FILE_FORMAT_NONE 0
